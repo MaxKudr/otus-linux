@@ -1,0 +1,2 @@
+MON_FILE="/var/log/mon-log"
+MON_SEARCH="OTUS"

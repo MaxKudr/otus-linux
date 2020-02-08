@@ -1,0 +1,114 @@
+NODES = {
+	:n1 => {
+		:node_box  => 'centos/7',
+		:node_name => 'central-server',
+		:node_cpu  => 1,
+		:node_mem  => 256,
+		:node_nets => [
+			{ adapter: 2, ip: '192.168.0.1', netmask: '255.255.255.252', virtualbox__intnet: 'cs-cr' }
+		],
+                :node_port_fwd => {
+                },
+		:storages  => {
+		}
+	},
+	:n2 => {
+		:node_box  => 'centos/7',
+		:node_name => 'central-router',
+		:node_cpu  => 1,
+		:node_mem  => 256,
+		:node_nets => [
+			{ adapter: 2, ip: '192.168.0.2', netmask: '255.255.255.252', virtualbox__intnet: 'cs-cr' },
+			{ adapter: 3, ip: '192.168.0.5', netmask: '255.255.255.252', virtualbox__intnet: 'cr-ir1' },
+			{ adapter: 4, ip: '192.168.0.9', netmask: '255.255.255.252', virtualbox__intnet: 'cr-ir2' }
+		],
+                :node_port_fwd => {
+                },
+		:storages  => {
+		}
+	},
+	:n3 => {
+		:node_box  => 'centos/7',
+		:node_name => 'inet-router-1',
+		:node_cpu  => 1,
+		:node_mem  => 256,
+		:node_nets => [
+			{ adapter: 2, ip: '192.168.0.6', netmask: '255.255.255.252', virtualbox__intnet: 'cr-ir1' }
+		],
+                :node_port_fwd => {
+                },
+		:storages  => {
+		}
+	},
+	:n4 => {
+		:node_box  => 'centos/7',
+		:node_name => 'inet-router-2',
+		:node_cpu  => 1,
+		:node_mem  => 256,
+		:node_nets => [
+			{ adapter: 2, ip: '192.168.0.10', netmask: '255.255.255.252', virtualbox__intnet: 'cr-ir2' }
+		],
+                :node_port_fwd => {
+                        :http => {
+                                :guest => 8080,
+                                :host => 8080
+                        }
+                },
+		:storages  => {
+		}
+	}
+}
+
+
+Vagrant.configure("2") do |config|
+
+	NODES.each do |node, node_config|
+
+		config.vm.synced_folder '.', '/vagrant', type: 'rsync', rsync__exclude: ['*.vdi', '.git']
+
+		config.vm.define node_config[:node_name] do |node|
+
+			node.vm.box = node_config[:node_box]
+			node.vm.hostname = node_config[:node_name]
+			node_config[:node_nets].each do |net_config|
+				node.vm.network "private_network", net_config
+			end
+
+			node.vm.provider 'virtualbox' do |vb|
+				vb.name = node_config[:node_name]
+				vb.cpus = node_config[:node_cpu]
+				vb.memory = node_config[:node_mem]
+
+				needSATA = false
+
+                                node_config[:node_port_fwd].each do |port, port_config|
+                                        node.vm.network "forwarded_port", guest: port_config[:guest], host: port_config[:host]
+                                end
+
+				node_config[:storages].each do |stor, stor_config|
+					unless File.exist?(stor_config[:stor_file])
+						vb.customize ['createmedium', 'disk', \
+						                              '--filename', stor_config[:stor_file], \
+						                              '--size', stor_config[:stor_size] * 1024]
+						needSATA = true
+					end
+				end
+
+				if needSATA == true
+					vb.customize ['storagectl', :id, '--name', 'SATA', '--add', 'sata']
+
+					node_config[:storages].each do |stor, stor_config|
+						vb.customize ['storageattach', :id, \
+					    	                           '--storagectl', 'SATA', \
+					        	                       '--port', stor_config[:stor_port], \
+					            	                   '--device', 0, \
+					                	               '--type', 'hdd', \
+					                    	           '--medium', stor_config[:stor_file]]
+					end
+				end
+			end
+		end
+	end
+
+	config.vm.provision "ansible", type: :ansible, playbook: "provisioning/lesson-20.yml"
+end

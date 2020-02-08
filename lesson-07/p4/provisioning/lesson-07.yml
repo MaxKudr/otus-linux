@@ -1,0 +1,112 @@
+---
+- hosts: lesson-07-p4
+  become: yes
+
+  tasks:
+   - name: 'umount /boot and remove from fstab'
+     mount:
+       path: /boot
+       fstype: xfs
+       state: absent
+
+
+   - name: 'mask boot.mount service'
+     systemd:
+       name: boot.mount
+       state: stopped
+       masked: yes
+
+
+   - name: 'create /boot directory'
+     file:
+       path: /boot
+       state: directory
+
+
+   - name: 'mount boot partition to /boot'
+     mount:
+       path: /mnt/boot-old
+       src: /dev/sda2
+       fstype: xfs
+       state: mounted
+
+
+   - name: 'copy files from /mnt/boot-old to /boot'
+     shell: 'cp -a /mnt/boot-old/* /boot'
+
+
+   - name: 'umount /mnt/boot-old'
+     mount:
+       path: /mnt/boot-old
+       state: absent
+
+
+   - name: 'extend VolGroup00 to sdb'
+     lvg:
+       vg: VolGroup00
+       pvs: /dev/sda3,/dev/sdb
+
+
+   - name: 'move VolGroup00 to sdb'
+     command: 'pvmove -n {{ item }} /dev/sda3 /dev/sdb'
+     with_items:
+       - '/dev/VolGroup00/LogVol00'
+       - '/dev/VolGroup00/LogVol01'
+
+
+   - name: 'reduce VolGroup00'
+     lvg:
+       vg: VolGroup00
+       pvs: /dev/sdb
+
+
+   - name: 'remove all partitions from sda'
+     parted: device=/dev/sda number={{ item }} state=absent
+     with_items:
+       - 1 
+       - 2
+       - 3
+
+
+   - name: 'extend VolGroup00 on sda'
+     lvg:
+       vg: VolGroup00
+       pvs: /dev/sda,/dev/sdb
+       pv_options: '--bootloaderareasize 1m'
+
+
+   - name: 'move volumes back to sda'
+     command: 'pvmove -n {{ item }} /dev/sdb /dev/sda'
+     with_items:
+       - '/dev/VolGroup00/LogVol00'
+       - '/dev/VolGroup00/LogVol01'
+
+
+   - name: 'reduce VolGroup00'
+     lvg:
+       vg: VolGroup00
+       pvs: /dev/sda
+
+
+   - name: 'configure Rumyantsev repo'
+     yum_repository:
+       name: rumyantsev
+       description: 'Alexander Rumyantsev repo'
+       baseurl: https://yum.rumyantsev.com/centos/7/x86_64/
+       gpgcheck: no
+
+
+   - name: 'update grub'
+     yum:
+       name: grub2
+       disablerepo: '*'
+       enablerepo: 'rumyantsev'
+       state: latest
+
+
+   - name: 'grub2-install'
+     command: 'grub2-install /dev/sda'
+
+
+   - name: 'grub2-mkconfig'
+     command: 'grub2-mkconfig -o /etc/grub2.cfg'

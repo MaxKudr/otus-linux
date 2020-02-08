@@ -1,0 +1,12 @@
+---
+- hosts:
+    - web
+  become: yes
+
+  roles:
+    - nginx
+    - mysql
+    - postgresql
+    - site_a
+    - site_b
+    - site_c

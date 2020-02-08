@@ -1,0 +1,20 @@
+---
+- name: install packages
+  yum:
+    name: postfix
+    state: present
+
+
+- name: copy configs
+  copy: src={{ item.src }} dest={{ item.dest }}
+  with_items:
+    - { src: 'postfix/main.cf', dest: '/etc/postfix/' }
+    - { src: 'postfix/master.cf', dest: '/etc/postfix/' }
+  notify: restart postfix
+
+
+- name: start and enable service
+  systemd:
+    name: postfix
+    state: started
+    enabled: yes

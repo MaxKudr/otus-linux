@@ -1,0 +1,82 @@
+---
+- name: 'disable default router for eth0'                                                                                                                                                                          
+  lineinfile:                                                                                                                                                                                                      
+    path: /etc/sysconfig/network-scripts/ifcfg-eth0                                                                                                                                                                
+    regexp: '^DEFROUTE='                                                                                                                                                                                           
+    line: DEFROUTE="no"                                                                                                                                                                                            
+  notify: restart network
+
+
+- name: 'copy network config file'
+  copy: src={{ item }} dest=/etc/sysconfig/network-scripts/
+  with_items:
+    - route-team0
+    - ifcfg-team0
+    - ifcfg-team0-eth1
+    - ifcfg-team0-eth2
+    - ifcfg-vlan11
+    - ifcfg-vlan22
+  notify: restart network
+
+
+- name: 'remove defautl network config'
+  file:
+   path: /etc/sysconfig/network-scripts/{{ item }}
+   state: absent
+  with_items:
+    - ifcfg-eth1
+    - ifcfg-eth2
+  notify: restart network
+
+
+- name: 'allow forwarding'
+  sysctl:
+    name: net.ipv4.ip_forward
+    value: 1
+    sysctl_set: yes
+
+
+- name: 'enable firewalld'
+  systemd:
+    name: firewalld
+    state: started
+    enabled: yes
+
+
+- name: 'enable masquerade'
+  firewalld:
+    masquerade: yes
+    permanent: yes
+    immediate: yes
+    state: enabled
+
+
+- name: 'create otus-lan folder'
+  file:
+    path: /opt/otus/otus-lan
+    state: directory
+
+
+- name: 'copy otus-lan files'
+  copy: src={{ item }} dest=/opt/otus/otus-lan mode=0755
+  with_items:
+    - otus-lan/lan-start.sh
+    - otus-lan/lan-stop.sh
+
+
+- name: 'copy otus-lan service'
+  copy:
+    src: otus-lan.service
+    dest: /etc/systemd/system/
+
+
+- name: 'reload systemd'
+  systemd:
+    daemon_reload: yes
+
+
+- name: 'start and enable otus-lan service'
+  systemd:
+    name: otus-lan
+    state: started
+    enabled: yes

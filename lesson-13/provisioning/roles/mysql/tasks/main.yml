@@ -1,0 +1,16 @@
+---
+- block:
+  - name: 'mysql | install packages'
+    yum:
+      name:
+        - mariadb-server
+      state: present
+
+
+  - name: 'mysql | enable and start service'
+    systemd:
+      name: mariadb
+      state: started
+      enabled: yes
+
+  tags: mysql

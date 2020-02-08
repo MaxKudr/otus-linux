@@ -1,0 +1,5 @@
+---
+- name: restart bacula-sd
+  systemd:
+    name: bacula-sd
+    state: restarted

@@ -1,0 +1,23 @@
+[Unit]
+Description=The Apache HTTP Server for %i config
+After=network.target remote-fs.target nss-lookup.target
+Documentation=man:httpd(8)
+Documentation=man:apachectl(8)
+
+[Service]
+Type=notify
+Environment=HTTPD_PID=/var/run/httpd/http-%i.pid HTTPD_CONF_DIR=/etc/httpd-%i
+EnvironmentFile=/etc/sysconfig/httpd-%i
+ExecStart=/usr/sbin/httpd $OPTIONS -DFOREGROUND -d ${HTTPD_CONF_DIR} -c "PIDFile ${HTTPD_PID}"
+ExecReload=/usr/sbin/httpd $OPTIONS -k graceful -d ${HTTPD_CONF_DIR} -c "PIDFile ${HTTPD_PID}"
+ExecStop=/bin/kill -WINCH ${MAINPID}
+# We want systemd to give httpd some time to finish gracefully, but still want
+# it to kill httpd after TimeoutStopSec if something went wrong during the
+# graceful stop. Normally, Systemd sends SIGTERM signal right after the
+# ExecStop, which would kill httpd. We are sending useless SIGCONT here to give
+# httpd time to finish.
+KillSignal=SIGCONT
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

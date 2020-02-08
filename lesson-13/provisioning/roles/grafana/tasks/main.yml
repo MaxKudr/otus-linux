@@ -1,0 +1,46 @@
+---
+- block:
+  - name: 'grafana | create repo'
+    copy:
+      src: 'grafana.repo'
+      dest: '/etc/yum.repos.d/grafana.repo'
+
+
+  - name: 'grafana | install packages'
+    yum:
+      name: 'grafana'
+      state: present
+
+
+  - name: 'grafana | create dir'
+    file:
+      path: '/var/lib/grafana/plugins'
+      owner: grafana
+      group: grafana
+      mode: 0755
+      state: directory
+
+
+  - name: 'grafana | copy dump db'
+    copy:
+      src: 'grafana.db'
+      dest: '/var/lib/grafana/'
+      owner: grafana
+      group: grafana
+      mode: 0644
+
+
+  - name: 'grafana | unpack zabbix plugin'
+    unarchive:
+      src: 'alexanderzobnin-grafana-zabbix-29a98f5.tgz'
+      dest: '/var/lib/grafana/plugins/'
+    notify: restart grafana
+
+
+  - name: 'grafana | enable and start service'
+    systemd:
+      name: grafana-server
+      state: started
+      enabled: yes
+
+  tags: grafana

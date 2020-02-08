@@ -1,0 +1,4 @@
+---
+repl_pass: '123456'
+backup_user: 'barman'
+backup_pass: '123456'

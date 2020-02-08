@@ -1,0 +1,6 @@
+---
+- hosts: lesson-08-p2
+  become: yes
+
+  roles:
+    - otus-p2

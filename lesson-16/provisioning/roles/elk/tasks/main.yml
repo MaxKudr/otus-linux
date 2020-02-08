@@ -1,0 +1,22 @@
+---
+- name: install OpenJDK
+  yum:
+    name: java-1.8.0-openjdk
+    state: present
+
+
+- name: configure Elastic repo
+  yum_repository:
+    name: elasticsearch-7.x
+    file: elasticsearch
+    description: Elasticsearch repository for 7.x packages
+    baseurl: https://artifacts.elastic.co/packages/7.x/yum
+    gpgcheck: no
+    gpgkey: https://artifacts.elastic.co/GPG-KEY-elasticsearch
+    enabled: yes
+    repo_gpgcheck: no
+
+
+- include_tasks: elasticsearch.yml
+- include_tasks: kibana.yml
+- include_tasks: logstash.yml

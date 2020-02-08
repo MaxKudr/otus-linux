@@ -1,0 +1,72 @@
+---
+- include_tasks: postgresql.yml
+- include_tasks: nodejs.yml
+- include_tasks: nginx.yml
+
+
+- name: create site directory
+  file:
+    path: /srv/www/sitec
+    state: directory
+
+
+- name: check config
+  stat:
+    path:  /srv/www/sitec/config.yml
+  register: wjs_config
+
+
+- name: create wikijs system group
+  group:
+    name: wikijs
+    state: present
+
+
+- name: create wikijs system user
+  user:
+    name: wikijs
+    group: wikijs
+
+
+- name: Download WikiJS
+  unarchive:
+    src: https://github.com/Requarks/wiki/releases/download/2.0.12/wiki-js.tar.gz
+    dest: /srv/www/sitec
+    owner: wikijs
+    group: wikijs
+    remote_src: yes
+  when: wjs_config.stat.exists == false
+
+
+- name: copy config
+  copy:
+    src: config.yml
+    dest: /srv/www/sitec/
+    owner: wikijs
+    group: wikijs
+
+
+- name: create data dir
+  file:
+    path: /srv/www/sitec/data
+    owner: wikijs
+    group: wikijs
+    state: directory
+
+  
+- name: install service
+  copy:
+    src: wikijs.service
+    dest: /etc/systemd/system
+
+
+- name: systemd daemon reload
+  systemd:
+    daemon_reload: yes
+
+
+- name: start and enable service
+  systemd:
+    name: wikijs
+    state: started
+    enabled: yes

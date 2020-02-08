@@ -1,0 +1,12 @@
+---
+- name: install packages
+  yum:
+    name: mariadb-server
+    state: present
+
+
+- name: start and enable service
+  systemd:
+    name: mariadb
+    state: started
+    enabled: yes

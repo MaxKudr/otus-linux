@@ -1,0 +1,15 @@
+---
+- hosts: master
+  become: yes
+
+  roles:
+    - percona
+    - percona-master
+
+
+- hosts: slave
+  become: yes
+
+  roles:
+    - percona
+    - percona-slave

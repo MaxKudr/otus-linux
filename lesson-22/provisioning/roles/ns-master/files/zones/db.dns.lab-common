@@ -1,0 +1,14 @@
+$TTL    86400
+
+@	IN	SOA	ns1.dns.lab. master.dns.lab. (
+				2019110900      ; Serial (YYYYMMDDvv)
+				28800           ; Refresh (8 hours)
+				7200            ; Retry (2 hours)
+				604800          ; Expire (1 week)
+				86400 )         ; Minimum (1 day)
+
+@	IN	NS	ns1.dns.lab.
+@	IN	NS	ns2.dns.lab.
+
+ns1	IN	A	192.168.168.2
+ns2	IN	A	192.168.168.3

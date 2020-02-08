@@ -1,0 +1,76 @@
+Director {
+	Name = bacula-dir
+	DIRport = 9101
+	QueryFile = "/etc/bacula/query.sql"
+	WorkingDirectory = "/var/spool/bacula"
+	PidDirectory = "/var/run"
+	Maximum Concurrent Jobs = 1
+	Password = "{{ bacula_dir_pass }}"
+	Messages = Standard
+}
+
+
+JobDefs {
+	Name = "DefaultJob"
+	Type = Backup
+	Level = Incremental
+	Storage = backup-sd
+	Messages = Standard
+	Pool = files-pool
+	Priority = 10
+	Write Bootstrap = "/var/spool/bacula/%c.bsr"
+}
+
+
+FileSet {
+	Name = "DefaultSet"
+	Include {
+		Options {
+			Signature = md5
+		}
+		File = /etc
+	}
+}
+
+
+Storage {
+	Name = backup-sd
+	Address = 10.0.10.2
+	SDPort = 9103
+	Password = "{{ bacula_sd_pass }}"
+	Device = FileStorage
+	MediaType = File
+}
+
+
+Pool {
+	Name = files-pool
+	Pool Type = Backup
+	Recycle = yes
+	AutoPrune = yes
+	Volume Retention = 3 weeks
+	Maximum Volume Bytes = 1G
+	Maximum Volumes = 5
+	LabelFormat = "vol-"
+}
+
+
+Catalog {
+	Name = OTUSCatalog
+	dbname = "bacula"; dbuser = "bacula"; dbpassword = "bacula"
+}
+
+
+Messages {
+	Name = Standard
+	mailcommand = "/usr/sbin/bsmtp -h localhost -f \"\(Bacula\) \<%r\>\" -s \"Bacula: %t %e of %c %l\" %r"
+	operatorcommand = "/usr/sbin/bsmtp -h localhost -f \"\(Bacula\) \<%r\>\" -s \"Bacula: Intervention needed for %j\" %r"
+	mail = root@localhost = all, !skipped
+	operator = root@localhost = mount
+	console = all, !skipped, !saved
+	append = "/var/log/bacula/bacula.log" = all, !skipped
+	catalog = all
+}
+
+
+@|"sh -c 'cat /etc/bacula/bacula-dir.conf.d/jobs/*.conf'"

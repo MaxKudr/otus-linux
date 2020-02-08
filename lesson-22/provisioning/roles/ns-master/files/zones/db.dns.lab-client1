@@ -1,0 +1,3 @@
+$include  "/var/named/db.dns.lab-common"
+
+web1	IN	A	192.168.168.4

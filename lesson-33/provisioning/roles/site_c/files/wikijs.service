@@ -1,0 +1,14 @@
+[Unit]
+Description=Wiki.js
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/bin/node server
+Restart=always
+User=wikijs
+Environment=NODE_ENV=production
+WorkingDirectory=/srv/www/sitec/
+
+[Install]
+WantedBy=multi-user.target

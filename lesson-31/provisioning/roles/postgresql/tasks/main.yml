@@ -1,0 +1,19 @@
+---
+- name: install PostgreSQL repo
+  yum:
+    name: https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm
+    state: present
+
+
+- name: install packages
+  yum:
+    name:
+      - postgresql12-server
+      - python-psycopg2
+    state: present
+
+
+- name: enable service
+  systemd:
+    name: postgresql-12
+    enabled: yes

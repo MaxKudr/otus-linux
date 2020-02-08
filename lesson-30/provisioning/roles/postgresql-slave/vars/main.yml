@@ -1,0 +1,7 @@
+---
+pg_master_host: '10.10.10.1'
+pg_master_port: '5432'
+pg_repl_user: 'repluser'
+pg_repl_pass: '123456'
+backup_host: '10.10.10.3'
+backup_user: 'barman'

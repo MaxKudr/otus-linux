@@ -1,0 +1,11 @@
+---
+- name: restart postfix
+  systemd:
+    name: postfix
+    state: restarted
+
+
+- name: restart dovecot
+  systemd:
+    name: dovecot
+    state: restarted

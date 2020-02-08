@@ -1,0 +1,46 @@
+---
+- name: install REMI repo
+  yum:
+    name: https://rpms.remirepo.net/enterprise/remi-release-7.rpm
+    state: present
+
+
+- name: install php-fpm
+  yum:
+    name:
+      - php74-php-fpm
+      - php74-php-mysqlnd
+    state: present
+
+
+- name: configure php-fpm
+  template: src={{ item.src }} dest={{ item.dest }}
+  with_items:
+    - { src: 'php-fpm.conf.j2', dest: '/etc/opt/remi/php74/php-fpm.conf' }
+    - { src: 'www.conf.j2', dest: '/etc/opt/remi/php74/php-fpm.d/www.conf' }
+  notify: restart php-fpm
+
+
+- name: create run folder
+  file:
+    path: /run/php-fpm
+    owner: root
+    group: root
+    mode: 0755
+    state: directory
+
+
+- name: create log folder
+  file:
+    path: /var/log/php-fpm
+    owner: root
+    group: root
+    mode: 0755
+    state: directory
+
+
+- name: start and enable service
+  systemd:
+    name: php74-php-fpm
+    state: started
+    enabled: yes

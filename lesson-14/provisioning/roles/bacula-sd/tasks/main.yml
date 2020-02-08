@@ -1,0 +1,31 @@
+---
+- block:
+  - name: 'install packages'
+    yum:
+      name: bacula-storage
+      state: present
+
+
+  - name: 'copy config'
+    template:
+      src: 'bacula-sd.conf.j2'
+      dest: '/etc/bacula/bacula-sd.conf'
+    notify: restart bacula-sd
+
+
+  - name: 'create backup dir'
+    file:
+      path: '/var/bacula'
+      state: directory
+      owner: bacula
+      group: bacula
+      setype: bacula_store_t
+
+
+  - name: 'start and enable service'
+    systemd:
+      name: bacula-sd
+      state: started
+      enabled: yes
+
+  tags: 'bacula-sd'

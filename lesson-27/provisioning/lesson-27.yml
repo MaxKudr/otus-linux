@@ -1,0 +1,13 @@
+---
+- hosts: mail
+  become: yes
+
+  roles:
+    - mail
+
+
+- hosts: mail-client
+  become: yes
+
+  roles:
+    - mail-client

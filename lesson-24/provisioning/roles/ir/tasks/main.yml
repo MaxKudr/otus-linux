@@ -1,0 +1,41 @@
+---
+- name: 'copy network config file'
+  copy: src={{ item }} dest=/etc/sysconfig/network-scripts/
+  with_items:
+    - route-team0
+    - ifcfg-team0
+    - ifcfg-team0-eth1
+    - ifcfg-team0-eth2
+  notify: restart network
+
+
+- name: 'remove defautl network config'
+  file:
+   path: /etc/sysconfig/network-scripts/{{ item }}
+   state: absent
+  with_items:
+    - ifcfg-eth1
+    - ifcfg-eth2
+  notify: restart network
+
+
+- name: 'allow forwarding'
+  sysctl:
+    name: net.ipv4.ip_forward
+    value: 1
+    sysctl_set: yes
+
+
+- name: 'enable firewalld'
+  systemd:
+    name: firewalld
+    state: started
+    enabled: yes
+
+
+- name: 'enable masquerading'
+  firewalld:
+    masquerade: yes
+    state: enabled
+    permanent: yes
+    immediate: yes

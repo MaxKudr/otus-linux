@@ -1,0 +1,36 @@
+---
+- hosts: lesson-07-p2
+  become: yes
+
+  tasks:
+   - name: 'rename vg'
+     shell: 'vgrename VolGroup00 OtusVG'
+
+
+   - name: 'update /etc/fstab'
+     replace:
+       path: /etc/fstab
+       regexp: 'VolGroup00-'
+       replace: 'OtusVG-'
+
+
+   - name: 'update /etc/default/grub'
+     replace:
+       path: /etc/default/grub
+       regexp: '([/=])VolGroup00([-/])'
+       replace: '\1OtusVG\2'
+
+
+   - name: 'update grub config'
+     replace:
+       path: /boot/grub2/grub.cfg
+       regexp: '([/=])VolGroup00([-/])'
+       replace: '\1OtusVG\2'
+
+
+   - name: 'update boot image'
+     command: 'dracut -f'
+
+
+   - name: 'force reboot server'
+     command: 'systemctl reboot -f'

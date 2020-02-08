@@ -1,0 +1,81 @@
+Client {
+	Name = otus-client
+	Address = 10.0.10.3
+	FDPort = 9102
+	Catalog = OTUSCatalog
+	Password = "bacula-fd-password"
+	File Retention = 1 months
+	Job Retention = 1 months
+	AutoPrune = yes
+}
+
+
+Job {
+	Name = "otus-client_base_dd"
+	Client = "otus-client"
+	JobDefs = "DefaultJob"
+	FileSet = "otus-client-FS"
+	Level = base
+}
+
+
+Job {
+	Name = "otus-client_fs_dd"
+	Client = "otus-client"
+	JobDefs = "DefaultJob"
+	FileSet = "otus-client-FS"
+	Base = otus-client_base_dd
+	Accurate = yes
+}
+
+
+Job {
+	Name = "otus-client_fs"
+	Client = "otus-client"
+	JobDefs = "DefaultJob"
+	Schedule = "otus-client_sched"
+	FileSet = "otus-client-FS-compress"
+}
+
+
+Schedule {
+	Name = "otus-client_sched"
+	Run = Full daily at 00:00
+	Run = Incremental hourly at 00:05
+	Run = Incremental hourly at 00:15
+	Run = Incremental hourly at 00:25
+	Run = Incremental hourly at 00:35
+	Run = Incremental hourly at 00:45
+	Run = Incremental hourly at 00:55
+	Run = Differential hourly at 00:00
+	Run = Differential hourly at 00:10
+	Run = Differential hourly at 00:20
+	Run = Differential hourly at 00:30
+	Run = Differential hourly at 00:40
+	Run = Differential hourly at 00:50
+}
+
+
+FileSet {
+	Name = "otus-client-FS"
+	Include {
+		Options {
+			Signature = MD5
+		}
+
+		File = "/etc/"
+	}
+}
+
+
+FileSet {
+	Name = "otus-client-FS-compress"
+	Include {
+		Options {
+			Signature = MD5
+			Compression = GZIP
+		}
+
+		File = "/etc/"
+	}
+}

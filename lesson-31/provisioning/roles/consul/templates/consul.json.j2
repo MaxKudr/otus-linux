@@ -1,0 +1,17 @@
+{
+  "datacenter": "otus",
+  "node_name": "proxy",
+  "addresses" : { "http": "{{ ansible_eth1.ipv4.address }}" },
+  "bind_addr": "{{ ansible_eth1.ipv4.address }}",
+  "node_name": "{{ ansible_eth1.ipv4.address }}",
+  "rejoin_after_leave": true,
+  "domain": "consul",
+  "retry_join": [ "{{ ansible_eth1.ipv4.address }}"],
+  "bootstrap_expect": 1,
+  "server": true,
+  "verify_incoming": false,
+  "verify_outgoing": false,
+  "data_dir": "/opt/consul",
+  "disable_remote_exec": false,
+  "ui": true
+}

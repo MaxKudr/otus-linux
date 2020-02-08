@@ -1,0 +1,5 @@
+---
+- name: restart nfs-client
+  systemd:
+    name: nfs-client.target
+    state: restarted

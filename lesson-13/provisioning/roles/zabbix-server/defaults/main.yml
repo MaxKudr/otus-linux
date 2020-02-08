@@ -1,0 +1,3 @@
+---
+zabbix_db_user: 'zabbix'
+zabbix_db_pass: 'zabbix'

@@ -1,0 +1,5 @@
+---
+- hosts: otus-log
+  become: yes
+  roles:
+    - log

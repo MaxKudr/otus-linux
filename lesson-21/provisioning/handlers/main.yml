@@ -1,0 +1,11 @@
+---
+- name: restart ospfd
+  systemd:
+    name: ospfd
+    state: restarted
+
+
+- name: restart zebra
+  systemd:
+    name: zebra
+    state: restarted

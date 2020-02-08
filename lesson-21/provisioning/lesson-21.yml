@@ -1,0 +1,29 @@
+---
+- hosts: r1
+  become: yes
+
+  tasks:
+    - import_tasks: r1.yml
+
+  handlers:
+    - import_tasks: handlers/main.yml
+
+
+- hosts: r2
+  become: yes
+
+  tasks:
+    - import_tasks: r2.yml
+
+  handlers:
+    - import_tasks: handlers/main.yml
+
+
+- hosts: r3
+  become: yes
+
+  tasks:
+    - import_tasks: r3.yml
+
+  handlers:
+    - import_tasks: handlers/main.yml

@@ -1,0 +1,27 @@
+version: '3.7'
+services:
+
+  web:
+    build: nginx/
+    image: otus-web:latest
+    container_name: web
+    ports:
+      - 80:80
+    volumes:
+      - ./www-root:/usr/share/nginx/html
+    depends_on:
+      - php-fpm
+    networks:
+      - otus_net
+
+  php-fpm:
+    build: php-fpm/
+    image: otus-php-fpm:latest
+    container_name: php-fpm
+    volumes:
+      - ./www-root:/usr/share/nginx/html
+    networks:
+      - otus_net
+
+networks:
+  otus_net:

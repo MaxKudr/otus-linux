@@ -1,0 +1,142 @@
+---
+- hosts: lesson-03
+  become: yes
+  tasks:
+    - name: 'install packages'
+      yum:
+        name:
+          - xfsdump
+        state: present
+
+
+    - name: 'check oldroot'
+      stat:
+        path: '/dev/mapper/VolGroup00-oldroot'
+      register: oldroot
+
+
+    - block:
+      - name: 'extend volume group'
+        lvg:
+          vg: 'VolGroup00'
+          pvs: '/dev/sda3,/dev/sdb'
+
+
+      - name: 'create tmproot lvm'
+        lvol:
+          vg: VolGroup00
+          lv: 'tmproot'
+          size: 1G
+          pvs: '/dev/sdb' 
+
+
+      - name: 'create fs on tmproot'
+        filesystem:
+          fstype: 'xfs'
+          dev: '/dev/VolGroup00/tmproot'
+
+
+      - name: 'mount tmproot'
+        mount:
+          path: '/mnt'
+          src: '/dev/VolGroup00/tmproot'
+          fstype: 'xfs'
+          state: mounted
+
+
+      - name: 'check bin directory'
+        stat:
+          path: '/mnt/usr/bin'
+        register: need_dump
+
+
+      - name: 'dump root fs to new root'
+        shell: 'xfsdump -J - / | xfsrestore -J - /mnt'
+        when: need_dump.stat.exists == false
+
+
+      - name: 'clean mount point from fstab'
+        lineinfile:
+          path: '/mnt/etc/fstab'
+          regexp: 'tmproot'
+          state: absent
+
+
+      - name: 'append home,var mount points to fstab'
+        lineinfile: path='/mnt/etc/fstab' regexp='{{ item.regexp }}' line='{{ item.line }}'
+        with_items:
+          - { regexp: 'home', line: '/dev/mapper/VolGroup00-home /home xfs defaults 0 0'}
+          - { regexp: 'var', line: '/dev/mapper/VolGroup00-var /var xfs defaults 0 0'}
+
+
+      - name: 'remove home,var directories'
+        file: path='{{ item }}' state=absent
+        with_items:
+          - '/mnt/home'
+          - '/mnt/var'
+
+
+      - name: 'umount tmproot'
+        mount:
+          path: '/mnt'
+          state: absent
+
+
+      - name: 'rename LogVol00 --> oldroot'
+        shell: '/usr/sbin/lvrename VolGroup00 LogVol00 oldroot'
+
+
+      - name: 'rename tmproot --> LogVol00'
+        shell: '/usr/sbin/lvrename VolGroup00 tmproot LogVol00'
+
+      when: oldroot.stat.exists == false
+
+
+    - name: 'create home volume'
+      lvol:
+        vg: 'VolGroup00'
+        lv: 'home'
+        pvs: '/dev/sdb'
+        size: 50M
+
+
+    - name: 'create filesystem on home volume'
+      filesystem:
+        fstype: 'xfs'
+        dev: '/dev/VolGroup00/home'
+
+
+    - name: 'create var volume'
+      lvol:
+        vg: 'VolGroup00'
+        lv: 'var'
+        size: 200M
+        pvs: '/dev/sdb'
+
+
+    - name: 'create filesystem on var volume'
+      filesystem:
+        fstype: 'xfs'
+        dev: '/dev/VolGroup00/var'
+
+
+    - name: 'mount home,var volumes'
+      mount: path='{{ item.path }}' src='{{ item.src }}' fstype='xfs' state=mounted
+      with_items:
+        - { path: '/mnt/home', src: '/dev/VolGroup00/home' }
+        - { path: '/mnt/var', src: '/dev/VolGroup00/var' }
+
+
+    - name: 'syncing home dir'
+      shell: 'rsync -aX --delete /home/ /mnt/home'
+
+
+    - name: 'syncing var dir'
+      shell: 'rsync -aX --delete /var/ /mnt/var'
+
+
+    - name: 'umount home,var volumes'
+      mount: path='{{ item }}' state=absent
+      with_items:
+        - '/mnt/home'
+        - '/mnt/var'

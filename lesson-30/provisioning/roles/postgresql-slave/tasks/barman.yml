@@ -1,0 +1,46 @@
+---
+- name: install EPEL repo
+  yum:
+    name: epel-release
+    state: present
+
+
+- name: install barman-cli
+  yum:
+    name: barman-cli
+    state: present
+
+
+- name: configure WAL archive
+  lineinfile: path=/var/lib/pgsql/12/data/postgresql.conf line={{ item }}
+  with_items:
+    - archive_mode = on
+    - archive_command = 'ssh -o StrictHostKeyChecking=no {{ backup_user }}@{{ backup_host }} true && /bin/barman-wal-archive {{ backup_host }} slave %p'
+  notify: restart postgresql
+
+
+- name: create .ssh dir
+  file:
+    path: /var/lib/pgsql/.ssh
+    state: directory
+    mode: 0700
+    owner: postgres
+    group: postgres
+
+
+- name: copy pub key
+  copy:
+    src: id_rsa.pub
+    dest: /var/lib/pgsql/.ssh/
+    mode: 0644
+    owner: postgres
+    group: postgres
+
+
+- name: copy private key
+  copy:
+    src: id_rsa
+    dest: /var/lib/pgsql/.ssh/
+    mode: 0600
+    owner: postgres
+    group: postgres

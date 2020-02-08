@@ -1,0 +1,39 @@
+---
+- hosts: inet-router
+  become: yes
+
+  tasks:
+  - name: 'copy static route config file'
+    copy: src={{ item.src }} dest=/etc/sysconfig/network-scripts/route-{{ item.dest }}
+    with_items:
+      - { src: 'inet-router-eth1', dest: 'eth1'}
+    notify: restart network
+
+
+  - name: 'allow forwarding'
+    sysctl:
+      name: net.ipv4.ip_forward
+      value: 1
+      sysctl_set: yes
+
+
+  - name: 'enable firewalld'
+    systemd:
+      name: firewalld
+      state: started
+      enabled: yes
+
+
+  - name: 'enable masquerading'
+    firewalld:
+      masquerade: yes
+      state: enabled
+      permanent: yes
+      immediate: yes
+
+
+  handlers:
+  - name: restart network
+    systemd:
+      name: network
+      state: restarted

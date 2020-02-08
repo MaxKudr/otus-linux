@@ -1,0 +1,106 @@
+---
+- hosts: lesson-01
+  become: yes
+  vars:
+    kernel_ver: '5.2.7'
+    oldconfig: 'config-3.10.0-957.12.2.el7.x86_64'
+  tasks:
+    - name: 'install packages'
+      yum:
+        name:
+          - gcc
+          - make
+          - flex
+          - bison
+          - openssl
+          - openssl-devel
+          - bc
+          - elfutils-libelf-devel
+          - perl
+        state: present
+
+
+    - name: 'create temporary build folder'
+      file:
+        path: '/tmp/kernel-{{ kernel_ver}}'
+        state: directory
+      register: kernel_src_dir
+
+
+    - name: 'check kernel source'
+      stat:
+        path: '{{ kernel_src_dir.path }}/linux-{{ kernel_ver }}'
+      register: kernel_src_subdir
+
+
+    - name: 'download and unpack kernel source'
+      unarchive:
+        src: 'https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-{{ kernel_ver }}.tar.xz'
+        dest: '{{ kernel_src_dir.path }}'
+        remote_src: yes
+      when: kernel_src_subdir.stat.exists == false
+
+
+    - name: 'copy oldconfig'
+      copy:
+        src: '{{ oldconfig }}'
+        dest: '{{ kernel_src_dir.path }}/linux-{{ kernel_ver }}/.config'
+      when: kernel_src_subdir.stat.exists == true
+
+
+    - name: 'prepare config'
+      shell: 'make olddefconfig'
+      args:
+        chdir: '{{ kernel_src_dir.path }}/linux-{{ kernel_ver }}/'
+
+        
+    - name: 'fetch new config to local'
+      fetch:
+        src: '{{ kernel_src_dir.path }}/linux-{{ kernel_ver }}/.config'
+        dest: '/tmp/config-{{ kernel_ver }}'
+        flat: yes
+
+
+    - name: 'check compiled kernel'
+      stat:
+        path: '{{ kernel_src_dir.path }}/linux-{{ kernel_ver }}/vmlinux'
+      register: kernel_new
+
+
+    - name: 'make kernel ({{ansible_processor_vcpus}} threads)'
+      shell: 'make -j{{ansible_processor_vcpus}}'
+      args:
+        chdir: '{{ kernel_src_dir.path }}/linux-{{ kernel_ver }}/'
+      when: kernel_new.stat.exists == false
+
+
+    - name: 'check compiled kernel'
+      stat:
+        path: '{{ kernel_src_dir.path }}/linux-{{ kernel_ver }}/vmlinux'
+      register: kernel_new
+
+
+    - name: 'install modules'
+      shell: 'make modules_install'
+      args:
+        chdir: '{{ kernel_src_dir.path }}/linux-{{ kernel_ver }}/'
+      when: kernel_new.stat.exists == true
+
+
+
+    - name: 'install kernel'
+      shell: 'make install'
+      args:
+        chdir: '{{ kernel_src_dir.path }}/linux-{{ kernel_ver }}/'
+      when: kernel_new.stat.exists == true
+
+
+    - name: 'update grub config'
+      shell: 'grub2-mkconfig -o /boot/grub2/grub.cfg'
+      when: kernel_new.stat.exists == true
+
+
+    - name: 'remove build folder'
+      file:
+        path: '{{ kernel_src_dir.path }}'
+        state: absent

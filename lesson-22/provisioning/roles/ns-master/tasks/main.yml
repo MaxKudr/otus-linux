@@ -1,0 +1,29 @@
+---
+- name: 'install packages'
+  yum:
+    name: bind
+    state: present
+
+
+- name: 'copy config'
+  copy:
+    src: named.conf
+    dest: /etc/
+  notify: restart named
+
+
+- name: 'copy zones'
+  copy: src={{ item.src }} dest={{ item.dest }}
+  with_items:
+    - { src: 'zones/db.dns.lab-common', dest: '/var/named/' }
+    - { src: 'zones/db.dns.lab-all', dest: '/var/named/' }
+    - { src: 'zones/db.dns.lab-client1', dest: '/var/named/' }
+    - { src: 'zones/db.newdns.lab', dest: '/var/named/' }
+  notify: restart named
+
+
+- name: 'start and enable service'
+  systemd:
+    name: named
+    state: started
+    enabled: yes

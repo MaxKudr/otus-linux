@@ -1,0 +1,16 @@
+inet_interfaces = all
+inet_protocols = ipv4
+myhostname = mail.otus.local
+mydomain = otus.local
+mydestination = $myhostname, $mydomain, localhost
+
+masquerade_domains = $mydomain
+
+smtpd_helo_required = yes
+smtpd_delay_reject = no
+smtpd_banner = "Welcome to OTUS mail server"
+
+always_add_missing_headers = yes
+
+alias_maps = hash:/etc/aliases
+alias_database = hash:/etc/aliases

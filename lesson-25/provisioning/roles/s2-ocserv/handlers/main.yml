@@ -1,0 +1,5 @@
+---
+- name: restart ocserv
+  systemd:
+    name: ocserv
+    state: restarted

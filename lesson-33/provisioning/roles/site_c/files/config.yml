@@ -1,0 +1,27 @@
+port: 3000
+db:
+  type: postgres
+  host: localhost
+  port: 5432
+  user: wjs
+  pass: wjs
+  db: wjs
+  ssl: false
+  storage: path/to/database.sqlite
+ssl:
+  enabled: false
+  format: pem
+  key: path/to/key.pem
+  cert: path/to/cert.pem
+  pfx: path/to/cert.pfx
+  passphrase: null
+  dhparam: null
+  redirectNonSSLPort: 80
+pool:
+bindIP: 127.0.0.1
+logLevel: info
+uploads:
+  maxFileSize: 5242880
+  maxFiles: 10
+offline: false
+dataPath: ./data

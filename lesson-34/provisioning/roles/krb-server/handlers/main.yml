@@ -1,0 +1,11 @@
+---
+- name: restart krb5kdc
+  systemd:
+    name: krb5kdc
+    state: restarted
+
+
+- name: restart kadmin
+  systemd:
+    name: kadmin
+    state: restarted

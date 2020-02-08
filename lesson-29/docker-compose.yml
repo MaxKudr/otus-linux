@@ -1,0 +1,53 @@
+version: '3.4'
+
+services:
+  db:
+    image: mysql:8.0.19
+    env_file:
+      - db/db.env
+    deploy:
+      replicas: ${CLUSTER_MEMBERS:-3}
+    volumes:
+      - ./db/mysql/conf.d/cluster.cnf:/tmp/cluster.cnf
+      - ./db/etcd/etcdctl:/usr/bin/etcdctl
+      - ./db/docker-entrypoint.sh:/usr/local/bin/docker-entrypoint.sh
+      - ./db/update_config.sh:/usr/local/bin/update_config.sh
+      - ./db/register_node.sh:/usr/local/bin/register_node.sh
+    networks:
+      - interconnect
+
+
+  etcd:
+    image: gcr.io/etcd-development/etcd:v3.3.18
+    env_file: etcd/etcd.env
+    networks:
+      - interconnect
+
+
+  router:
+    image: mysql/mysql-router:8.0.19
+    environment:
+      - CLUSTER_MEMBERS
+    env_file: router/router.env
+    ports:
+      - 3306:6446
+      - 3307:6447
+    healthcheck:
+      start_period: 20m
+    volumes:
+      - ./router/etcd/etcdctl:/usr/bin/etcdctl
+      - ./router/run.sh:/run.sh
+      - ./router/init-cluster.sh:/init-cluster.sh
+    networks:
+      - default
+      - interconnect
+
+
+networks:
+  interconnect:
+    driver: overlay
+    internal: true
+    ipam:
+      driver: default
+      config:
+      - subnet: 10.10.10.0/24

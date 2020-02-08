@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+/sbin/ip l set up tap0
+/sbin/brctl addif br0 tap0
+/sbin/ip l set up br0

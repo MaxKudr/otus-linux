@@ -1,0 +1,33 @@
+---
+- name: install EPEL
+  yum:
+    name: epel-release
+    state: present
+
+
+- name: install packages
+  yum:
+    name: nginx
+    state: present
+
+
+- name: copy config
+  copy: src={{ item.src }} dest={{ item.dest }}
+  with_items:
+    - { src: nginx.conf, dest: /etc/nginx/ }
+    - { src: default.conf, dest: /etc/nginx/conf.d/ }
+  notify: reload nginx
+
+
+- name: copy index page
+  copy: src=index.html dest={{ item }}
+  with_items:
+    - /usr/share/nginx/html/
+    - /usr/share/nginx/html/some/sub/path/
+
+
+- name: start and enable service
+  systemd:
+    name: nginx
+    state: started
+    enabled: yes

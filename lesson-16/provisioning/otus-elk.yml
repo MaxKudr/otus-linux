@@ -1,0 +1,5 @@
+---
+- hosts: otus-elk
+  become: yes
+  roles:
+    - elk

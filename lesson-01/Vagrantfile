@@ -1,0 +1,34 @@
+NODES = {
+	:n1 => {
+		:node_box  => 'centos/7',
+		:node_name => 'lesson-01',
+		:node_cpu  => 4,
+		:node_mem  => 2048
+	}
+}
+
+
+Vagrant.configure("2") do |config|
+
+	NODES.each do |node, node_config|
+
+		config.vm.define node_config[:node_name] do |node|
+
+			node.vm.box = node_config[:node_box]
+			node.vm.hostname = node_config[:node_name]
+
+			node.vm.provider 'virtualbox' do |vb|
+				vb.name = node_config[:node_name]
+				vb.cpus = node_config[:node_cpu]
+				vb.memory = node_config[:node_mem]
+			end
+
+		end
+
+		config.vm.provision :ansible do |ansible|
+			ansible.playbook = 'provisioning/lesson-01.yml'
+		end
+
+	end
+
+end

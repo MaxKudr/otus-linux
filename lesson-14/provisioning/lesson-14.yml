@@ -1,0 +1,15 @@
+---
+- hosts: otus-server
+  become: yes
+
+  roles:
+    - mysql
+    - bacula-dir
+    - bacula-sd
+
+
+- hosts: otus-client
+  become: yes
+
+  roles:
+    - bacula-fd

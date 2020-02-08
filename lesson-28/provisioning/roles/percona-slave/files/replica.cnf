@@ -1,0 +1,14 @@
+[mysqld]
+log-bin = mysql-bin
+binlog-format = mixed
+
+server-id = 2
+gtid-mode = on
+enforce-gtid-consistency = on
+log-slave-updates = on
+
+replicate-do-table=bet.bookmaker
+replicate-do-table=bet.competition
+replicate-do-table=bet.market
+replicate-do-table=bet.odds
+replicate-do-table=bet.outcome

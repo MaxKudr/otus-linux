@@ -1,0 +1,4 @@
+---
+- include_tasks: nginx.yml
+- include_tasks: php-fpm.yml
+- include_tasks: mysql.yml

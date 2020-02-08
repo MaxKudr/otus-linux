@@ -1,0 +1,61 @@
+%undefine _disable_source_fetch
+
+Name   : typora
+Version: {{ typora_version }}
+Release: {{ typora_release }}%{?dist}
+Summary: A minimal Markdown reading & writing app.
+
+License: MIT
+Group  : Editors
+URL    : https://typora.io/
+Source0: https://typora.io/linux/typora_%{version}_amd64.deb
+
+
+%description
+Typora will give you a seamless experience as both a reader and a writer. It removes the preview window, mode switcher, syntax symbols of markdown source code, and all other unnecessary distractions. Replace them with a real live preview feature to help you concentrate on the content itself.
+
+
+%install
+rm -rf %{buildroot}
+
+mkdir %{buildroot}
+mkdir -p %{buildroot}%{_bindir}
+mkdir -p %{buildroot}%{_docdir}/typora
+
+cd %{buildroot}
+
+%define temp_data_dir data-tmp
+
+mkdir %{temp_data_dir}
+ar p %{SOURCE0} data.tar.xz | tar -Jx -C %{temp_data_dir}
+
+mv %{temp_data_dir}/usr/share/typora/LICENSE %{temp_data_dir}/usr/share/doc/typora
+
+mv %{temp_data_dir}/usr/share/applications %{buildroot}%{_datadir}
+mv %{temp_data_dir}/usr/share/typora %{buildroot}%{_datadir}
+mv %{temp_data_dir}/usr/share/icons %{buildroot}%{_datadir}
+mv %{temp_data_dir}/usr/share/doc/typora %{buildroot}%{_docdir}
+mv %{temp_data_dir}/usr/bin/typora %{buildroot}%{_bindir}
+
+rm -rf %{temp_data_dir}
+
+
+%clean
+rm -rf %{buildroot}
+
+
+%files
+%defattr(-,root,root,-)
+%{_bindir}/typora
+%{_datadir}/applications/typora.desktop
+%{_datadir}/typora
+%{_datadir}/icons/hicolor/*/apps/typora.png
+
+%doc %{_docdir}/typora/copyright
+
+%license %{_docdir}/typora/LICENSE
+
+
+%changelog
+* Fri Aug 23 2019 Max Kudriavtsev <max@kudr.me> - 0.9.75-1
+- Initial version of the package

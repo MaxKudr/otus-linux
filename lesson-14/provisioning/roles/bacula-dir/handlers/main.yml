@@ -1,0 +1,5 @@
+---
+- name: restart bacula-dir
+  systemd:
+    name: bacula-dir
+    state: restarted

@@ -1,0 +1,62 @@
+---
+- name: install EPEL
+  yum:
+    name: epel-release
+    state: present
+
+
+- name: install packages
+  yum:
+    name: openvpn
+    state: present
+
+
+# Configure openvpn server
+
+- name: copy openvpn server config
+  copy:
+    src: otus.local-server.conf
+    dest: /etc/openvpn/server/otus.local.conf
+  notify: restart openvpn-server
+
+
+- name: copy certs and keys
+  copy: src=certs/{{ item }} dest=/etc/openvpn/server/certs/
+  with_items:
+    - ca.crt
+    - s1.crt
+    - s1.key
+    - dh.pem
+  notify: restart openvpn-server
+
+
+- name: start and enable service
+  systemd:
+    name: openvpn-server@otus.local
+    state: started
+    enabled: yes
+
+
+# Configure openvpn client
+
+- name: copy openvpn client config
+  copy:
+    src: otus.local-client.conf
+    dest: /etc/openvpn/client/otus.local.conf
+  notify: restart openvpn-client
+
+
+- name: start and enable service
+  systemd:
+    name: openvpn-client@otus.local
+    state: started
+    enabled: yes
+
+
+- name: enable forwarding
+  sysctl:
+    name: net.ipv4.ip_forward
+    value: 1
+    sysctl_set: yes
+    state: present
+    reload: yes

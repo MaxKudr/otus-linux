@@ -1,0 +1,9 @@
+[Unit]
+Description=Monitoring log timer
+
+[Timer]
+OnCalendar=*:*:0/30
+AccuracySec=1s
+
+[Install]
+WantedBy=multi-user.target

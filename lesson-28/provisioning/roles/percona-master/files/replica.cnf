@@ -1,0 +1,8 @@
+[mysqld]
+log-bin = mysql-bin
+binlog-format = mixed
+
+server-id = 1
+log-bin = mysql-bin
+gtid-mode = on
+enforce-gtid-consistency = on

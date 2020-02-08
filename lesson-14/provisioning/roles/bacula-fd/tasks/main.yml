@@ -1,0 +1,29 @@
+---
+- block:
+  - name: 'install packages'
+    yum:
+      name: bacula-client
+      state: present
+
+
+  - name: 'copy config file'
+    template:
+      src: 'bacula-fd.conf.j2'
+      dest: '/etc/bacula/bacula-fd.conf'
+    notify: restart bacula-fd
+
+
+  - name: 'copy cert and pem files'
+    copy: src='{{ item.src }}' dest='{{ item.dest }}'
+    with_items:
+      - { src: 'bacula-dir.crt', dest: '/etc/bacula/' }
+      - { src: 'otus-client.pem', dest: '/etc/bacula/' }
+
+
+  - name: 'start and enable service'
+    systemd:
+      name: bacula-fd
+      state: started
+      enabled: yes
+
+  tags: 'bacula-fd'

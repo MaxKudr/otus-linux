@@ -1,0 +1,26 @@
+---
+- name: 'install mon-log service, timer and config'
+  copy: src={{ item.src }} dest={{ item.dest }}
+  with_items:
+    - { src: 'mon-log.service', dest: '/etc/systemd/system/mon-log.service' }
+    - { src: 'mon-log.timer', dest: '/etc/systemd/system/mon-log.timer' }
+    - { src: 'mon-log', dest: '/etc/sysconfig/mon-log' }
+
+
+- name: 'install mon-log script'
+  copy:
+    src: 'mon-log.sh'
+    dest: '/usr/local/bin/mon-log.sh'
+    mode: 0755
+
+
+- name: 'reload systemd'
+  systemd:
+    daemon_reload: yes
+
+
+- name: 'enable mon-log timer'
+  systemd:
+    name: mon-log.timer
+    state: started
+    enabled: yes

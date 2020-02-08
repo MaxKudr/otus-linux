@@ -1,0 +1,29 @@
+Storage {
+	Name = bacula-sd
+	SDPort = 9103
+	WorkingDirectory = "/var/spool/bacula"
+	Pid Directory = "/var/run"
+	Maximum Concurrent Jobs = 20
+}
+
+Director {
+	Name = bacula-dir
+	Password = "{{ bacula_sd_pass }}"
+}
+
+Device {
+	Name = FileStorage
+	Media Type = File
+	Archive Device = /var/bacula
+	LabelMedia = yes
+	Random Access = Yes
+	AutomaticMount = yes
+	RemovableMedia = no
+	AlwaysOpen = no
+}
+
+
+Messages {
+	Name = Standard
+	director = bacula-dir = all
+}

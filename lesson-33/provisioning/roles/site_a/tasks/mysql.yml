@@ -1,0 +1,26 @@
+---
+- name: install packages
+  yum:
+    name: MySQL-python
+    state: present
+
+
+- name: copy site_a dump DB
+  copy:
+    src: sitea.sql.gz
+    dest: /tmp
+
+
+- name: restore site_a DB
+  mysql_db:
+    name: wp
+    state: import
+    target: /tmp/sitea.sql.gz
+
+
+- name: create site_a DB user
+  mysql_user:
+    name: wp
+    password: wp
+    priv: 'wp.*:ALL'
+    state: present

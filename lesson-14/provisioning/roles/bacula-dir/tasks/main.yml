@@ -1,0 +1,75 @@
+---
+- block:
+  - name: 'install packages'
+    yum:
+      name:
+        - bacula-director
+        - bacula-console
+      state: present
+
+
+  - name: 'create bacula db'
+    mysql_db:
+      name: bacula
+      state: present
+
+
+  - name: 'create bacula user db'
+    mysql_user:
+      name: bacula
+      password: bacula
+      host: localhost
+      priv: 'bacula.*:all'
+      state: present
+
+
+  - name: 'init bacula db'
+    command: '/usr/libexec/bacula/make_mysql_tables'
+
+
+  - name: 'create jobs directory'
+    file:
+      path: /etc/bacula/bacula-dir.conf.d/jobs
+      state: directory
+
+
+  - name: 'copy job config'
+    template:
+      src: otus-client.conf.j2
+      dest: /etc/bacula/bacula-dir.conf.d/jobs/otus-client.conf
+    notify: restart bacula-dir
+
+
+  - name: 'copy config'
+    template: src='{{ item.src }}' dest='{{ item.dest }}'
+    with_items:
+      - { src: 'bacula-dir.conf.j2', dest: '/etc/bacula/bacula-dir.conf' }
+    notify: restart bacula-dir
+
+
+  - name: 'copy pem file'
+    copy:
+      src: bacula-dir.pem
+      dest: /etc/bacula/
+
+
+  - name: 'copy bconsole config'
+    template:
+      src: bconsole.conf.j2
+      dest: /etc/bacula/bconsole.conf
+
+
+  - name: 'configure to use MySQL'
+    file:
+      src: '/usr/lib64/libbaccats-mysql.so'
+      dest: '/etc/alternatives/libbaccats.so'
+      state: link
+
+
+  - name: 'start and enable service'
+    systemd:
+      name: bacula-dir
+      state: started
+      enabled: yes
+
+  tags: 'bacula-dir'

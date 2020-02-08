@@ -1,0 +1,40 @@
+---
+- name: install packages
+  yum:
+    name:
+      - krb5-server
+
+
+- name: copy config files
+  copy: src={{ item.src }} dest={{ item.dest }}
+  with_items:
+    - { src: 'krb5.conf', dest: '/etc/' }
+    - { src: 'kdc.conf', dest: '/var/kerberos/krb5kdc/' }
+  notify: restart krb5kdc
+
+
+- name: copy kadm5.acl access file
+  copy:
+    src: kadm5.acl
+    dest: /var/kerberos/krb5kdc/
+  notify: restart kadmin
+
+
+- name: check exist principal DB
+  stat:
+    path: /var/kerberos/krb5kdc/principal
+  register: krb_princ
+
+
+- name: copy principal DB
+  unarchive:
+    src: principal.tgz
+    dest: /var/kerberos/krb5kdc/
+  when: krb_princ.stat.exists == false
+
+
+- name: start and enable service
+  systemd: name={{ item }} state=started enabled=yes
+  with_items:
+    - krb5kdc
+    - kadmin

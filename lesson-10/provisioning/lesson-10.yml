@@ -1,0 +1,95 @@
+---
+- hosts: lesson-10
+  become: yes
+
+  tasks:
+#
+# Configure PAM
+#
+  - name: 'allow ssh login by password'
+    lineinfile:
+      path: '/etc/ssh/sshd_config'
+      regexp: '^PasswordAuthentication'
+      line: 'PasswordAuthentication yes'
+    notify: reload sshd
+
+
+  - name: 'create admin group'
+    group:
+      name: admin
+      state: present
+
+
+  - name: 'add user vagrant to admin group'
+    user:
+      name: vagrant
+      groups: admin
+      append: yes
+
+  - name: 'create user1 not in admin group'
+    user:
+      name: user1
+      password: '$1$XrvoAONl$fxxfQXBuqeLvaZr35V43U.'
+      append: yes
+
+
+  - name: 'create user2 in admin group'
+    user:
+      name: user2
+      password: '$1$XrvoAONl$fxxfQXBuqeLvaZr35V43U.'
+      groups: admin
+      append: yes
+
+
+  - name: 'copy new pam file'
+    copy:
+      src: 'otus'
+      dest: '/etc/pam.d/otus'
+
+
+  - name: 'copy config for pam_time'
+    copy:
+      src: 'time.conf'
+      dest: '/etc/security/time.conf'
+
+
+  - name: 'configure pam system-auth (for ssh)'
+    pamd:
+      name: system-auth
+      type: account
+      control: required
+      module_path: pam_unix.so
+      new_type: account
+      new_control: include
+      new_module_path: 'otus'
+      state: before
+
+
+  - name: 'configure pam password-auth (for login)'
+    pamd:
+      name: password-auth
+      type: account
+      control: required
+      module_path: pam_unix.so
+      new_type: account
+      new_control: include
+      new_module_path: 'otus'
+      state: before
+
+#
+# Configure SUDO
+#
+
+  - name: 'add sudoers'
+    lineinfile:
+      path: '/etc/sudoers.d/otus'
+      create: yes
+      line: '%admin ALL=(ALL) NOPASSWD: ALL'
+
+
+
+  handlers:
+  - name: reload sshd
+    systemd:
+      name: sshd
+      state: reloaded

@@ -1,0 +1,7 @@
+[slave]
+path_prefix = "/usr/pgsql-12/bin/"
+backup_method = postgres
+conninfo = host={{ pg_backup_host }} user={{ pg_barman_user }} dbname=postgres
+streaming_archiver = on
+streaming_conninfo = host={{ pg_backup_host }} user={{ pg_barman_user }}
+slot_name = barman_slot

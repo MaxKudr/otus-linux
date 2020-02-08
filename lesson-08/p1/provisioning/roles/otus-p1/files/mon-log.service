@@ -1,0 +1,10 @@
+[Unit]
+Description=Monitoring log service
+
+[Service]
+Type=oneshot
+EnvironmentFile=/etc/sysconfig/mon-log
+ExecStart=/usr/local/bin/mon-log.sh "$MON_FILE" "$MON_SEARCH"
+
+[Install]
+WantedBy=multi-user.target

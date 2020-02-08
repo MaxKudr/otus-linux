@@ -1,0 +1,15 @@
+---
+- name: create database
+  become_user: postgres
+  postgresql_db:
+    name: nb
+
+
+- name: create user
+  become_user: postgres
+  postgresql_user:
+    db: nb
+    name: nb
+    password: nb
+    encrypted: yes
+    priv: ALL

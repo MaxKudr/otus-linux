@@ -1,0 +1,11 @@
+---
+- name: create site direcotry
+  file:
+    path: /srv/www/siteb
+    state: directory
+
+
+- include_tasks: postgresql.yml
+- include_tasks: redis.yml
+- include_tasks: netbox.yml
+- include_tasks: nginx.yml

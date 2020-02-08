@@ -1,0 +1,14 @@
+---
+- hosts: s1
+  become: yes
+
+  roles:
+    - s1
+
+
+- hosts: s2
+  become: yes
+
+  roles:
+    - s2
+    - s2-ocserv

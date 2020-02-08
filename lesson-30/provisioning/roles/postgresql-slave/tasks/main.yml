@@ -1,0 +1,81 @@
+---
+- name: check exist pg_hba.conf
+  stat:
+    path: /var/lib/pgsql/12/data/pg_hba.conf
+  register: pg_hba
+
+
+- name: copy password file
+  template:
+    src: pgpass.j2
+    dest: /var/lib/pgsql/.pgpass
+    owner: postgres
+    group: postgres
+    mode: 0600
+
+
+- block:
+  - name: wait master server
+    wait_for:
+      host: '{{ pg_master_host }}'
+      port: '{{ pg_master_port }}'
+      
+
+  - name: stop service
+    systemd:
+      name: postgresql-12
+      state: stopped
+
+
+  - name: copy db from master
+    become_user: postgres
+    command: '/usr/pgsql-12/bin/pg_basebackup -h {{ pg_master_host }} -D /var/lib/pgsql/12/data -U {{ pg_repl_user }} -X stream -R'
+
+
+  - name: start and enable service
+    systemd:
+      name: postgresql-12
+      state: started
+      enabled: yes
+
+
+  - name: check barman slot
+    become_user: postgres
+    command: psql -c "select slot_name from pg_replication_slots where slot_name='barman_slot'"
+    register: barman_slot
+
+
+  - name: create barman slot
+    become_user: postgres
+    command: psql -c "select pg_create_physical_replication_slot('barman_slot')"
+    when: barman_slot.stdout is search ('0 rows')
+
+
+  - name: configure replica slot
+    become_user: postgres
+    command: psql -c "alter system set primary_slot_name to 'barman_slot'"
+
+  when: pg_hba.stat.exists == false
+
+
+- name: install EPEL repo
+  yum:
+    name: epel-release
+    state: present
+
+
+- name: install barman-cli
+  yum:
+    name: barman-cli
+    state: present
+
+
+- name: configure WAL archive
+  lineinfile: path=/var/lib/pgsql/12/data/postgresql.conf line={{ item }}
+  with_items:
+    - archive_mode = on
+    - archive_command = 'ssh -o StrictHostKeyChecking=no barman@10.10.10.3 true && /bin/barman-wal-archive 10.10.10.3 slave %p'
+  notify: restart postgresql
+
+
+- include_tasks: barman.yml

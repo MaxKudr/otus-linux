@@ -1,0 +1,27 @@
+---
+- block:
+  - name: 'install packages'
+    yum:
+      name:
+        - mariadb-server
+        - MySQL-python
+      state: present
+
+
+  - name: 'update my.cnf'
+    lineinfile:
+      path: '/etc/my.cnf'
+      regexp: '^bind-address'
+      insertafter: '^\[mysqld\]'
+      line: 'bind-address=127.0.0.1'
+    notify: restart mariadb
+
+
+  - name: 'start and enable service'
+    systemd:
+      name: mariadb
+      state: started
+      enabled: yes
+
+  tags: mysql
+

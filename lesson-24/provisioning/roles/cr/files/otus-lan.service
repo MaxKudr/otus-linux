@@ -1,0 +1,13 @@
+[Unit]
+Description=Start OTUS lans
+After=network.service
+Requires=network.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/opt/otus/otus-lan/lan-start.sh
+ExecStop=/opt/otus/otus-lan/lan-stop.sh
+
+[Install]
+WantedBy=multi-user.target

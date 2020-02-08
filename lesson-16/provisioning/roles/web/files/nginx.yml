@@ -1,0 +1,6 @@
+- module: nginx
+  access:
+    enabled: true
+
+  error:
+    enabled: true

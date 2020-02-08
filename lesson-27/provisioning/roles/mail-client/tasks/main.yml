@@ -1,0 +1,12 @@
+---
+- name: install packages
+  yum:
+    name:
+      - telnet
+      - mutt
+
+
+- name: copy mutt config
+  copy:
+    src: Muttrc.local
+    dest: /etc/

@@ -1,0 +1,34 @@
+---
+- hosts: lesson-03
+  become: yes
+  tasks:
+    - name: 'install epel-release'
+      yum:
+        name: 'epel-release'
+        state: present
+
+
+    - name: 'install zfs repo'
+      yum:
+        name: 'http://download.zfsonlinux.org/epel/zfs-release.el7_5.noarch.rpm'
+        state: present
+          
+
+    - name: 'install zfs packages'
+      yum:
+        name:
+          - kernel
+          - zfs
+        state: latest
+
+
+    - name: 'load zfs module'
+      modprobe:
+        name: 'zfs'
+        state: present
+
+
+    - name: 'configure load zfs module on startup'
+      copy:
+        src: 'zfs.conf'
+        dest: '/etc/modules-load.d/zfs.conf'

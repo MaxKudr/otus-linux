@@ -1,0 +1,4 @@
+#%PAM-1.0
+account    [default=1 success=ignore]     pam_succeed_if.so user notingroup admin
+account    required                       pam_time.so
+

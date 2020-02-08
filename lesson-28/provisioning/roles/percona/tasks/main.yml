@@ -1,0 +1,60 @@
+---
+- name: install percona repo
+  yum:
+    name: https://repo.percona.com/yum/percona-release-latest.noarch.rpm
+    state: present
+
+
+- name: install packages
+  yum:
+    name:
+      - Percona-Server-server-57
+      - MySQL-python
+
+
+- name: check that already init
+  stat:
+    path: /var/lib/mysql/inited_via_ansible
+  register: percona_init
+
+
+- block:
+  - name: stop service
+    systemd:
+      name: mysqld
+      state: stopped
+
+
+  - name: copy mysqld service environment
+    copy:
+      src: mysql
+      dest: /etc/sysconfig/
+
+
+  - name: start service
+    systemd:
+      name: mysqld
+      state: started
+
+
+  - name: set root password
+    shell: mysql -uroot -e "flush privileges; alter user 'root'@'localhost' identified by '{{ mysql_root_password }}'"
+
+
+  - name: remove mysqld service environment
+    file:
+      path: /etc/sysconfig/mysql
+      state: absent
+
+
+  - name: restart mysqld service
+    systemd:
+      name: mysqld
+      state: restarted
+
+  - name: create init file
+    file:
+      path: /var/lib/mysql/inited_via_ansible
+      state: touch
+
+  when: percona_init.stat.exists == false

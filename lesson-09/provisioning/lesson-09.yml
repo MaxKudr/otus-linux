@@ -1,0 +1,9 @@
+---
+- hosts: lesson-09
+  become: yes
+
+  vars:
+    nginx_port: '8080'
+
+  roles:
+    - otus_nginx

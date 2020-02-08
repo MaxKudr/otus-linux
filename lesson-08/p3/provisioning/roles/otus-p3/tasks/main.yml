@@ -1,0 +1,51 @@
+---
+- name: 'install httpd'
+  yum:
+    name: httpd
+    state: present
+
+
+- name: 'copy custom index page'
+  copy:
+    src: 'index.html'
+    dest: '/var/www/html/index.html'
+
+
+- name: 'copy httpd@ service'
+  copy:
+    src: 'httpd@.service'
+    dest: '/etc/systemd/system/httpd@.service'
+
+
+- name: 'reload systemd'
+  systemd:
+    daemon_reload: yes
+
+
+- name: 'clone configuration of httpd'
+  command: 'cp -a {{ item.src }} {{ item.dest }}'
+  with_items:
+    - { src: '/etc/sysconfig/httpd', dest: '/etc/sysconfig/httpd-otus-1' }
+    - { src: '/etc/sysconfig/httpd', dest: '/etc/sysconfig/httpd-otus-2' }
+    - { src: '/etc/httpd/', dest: '/etc/httpd-otus-1/' }
+    - { src: '/etc/httpd/', dest: '/etc/httpd-otus-2/' }
+
+
+- name: 'update configuration of httpd'
+  lineinfile:
+    path: '/etc/httpd-{{ item.instance }}/conf/httpd.conf'
+    regexp: '^Listen'
+    line: 'Listen {{ item.port }}'
+  with_items:
+    - { instance: 'otus-1', port: '8080' }
+    - { instance: 'otus-2', port: '8008' }
+
+
+- name: 'start cloned httpd'
+  systemd:
+    name: 'httpd@{{ item }}'
+    state: started
+    enabled: yes
+  with_items:
+    - otus-1
+    - otus-2

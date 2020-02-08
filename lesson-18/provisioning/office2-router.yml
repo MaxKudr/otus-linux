@@ -1,0 +1,33 @@
+---
+- hosts: office2-router
+  become: yes
+
+  tasks:
+  - name: 'allow forwarding'
+    sysctl:
+      name: net.ipv4.ip_forward
+      value: 1
+      sysctl_set: yes
+
+
+  - name: 'disable default router for eth0'
+    lineinfile:
+      path: /etc/sysconfig/network-scripts/ifcfg-eth0
+      regexp: '^DEFROUTE='
+      line: DEFROUTE="no"
+    notify: restart network
+
+
+  - name: 'add default route for eth4'
+    lineinfile:
+      path: /etc/sysconfig/network-scripts/ifcfg-eth4
+      regexp: '^GATEWAY='
+      line: GATEWAY=192.168.0.21
+    notify: restart network
+
+
+  handlers:
+  - name: restart network
+    systemd:
+      name: network
+      state: restarted

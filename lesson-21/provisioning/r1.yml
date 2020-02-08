@@ -1,0 +1,45 @@
+- name: 'allow forwarding'
+  sysctl: name={{ item.name }} value={{ item.value }} sysctl_set=yes
+  with_items:
+    - { name: net.ipv4.ip_forward, value: 1 }
+    - { name: net.ipv4.conf.all.rp_filter, value: 0 }
+    - { name: net.ipv4.conf.eth1.rp_filter, value: 0 }
+    - { name: net.ipv4.conf.eth2.rp_filter, value: 0 }
+    - { name: net.ipv4.conf.eth3.rp_filter, value: 0 }
+
+
+- name: 'install packages'
+  yum:
+    name:
+      - telnet
+      - quagga
+    state: present
+
+
+- name: 'copy ospfd config'
+  copy:
+    src: r1-ospfd.conf
+    dest: /etc/quagga/ospfd.conf
+    owner: quagga
+    group: quagga
+    mode: 0640
+  notify: restart ospfd
+
+
+- name: 'copy zebra config'
+  copy:
+    src: r1-zebra.conf
+    dest: /etc/quagga/zebra.conf
+    owner: quagga
+    group: quagga
+    mode: 0640
+  notify: restart zebra
+
+
+- name: 'start and enable services'
+  systemd: name={{ item }} state=started enabled=yes
+  with_items:
+    - zebra
+    - ospfd
+
+

@@ -1,0 +1,46 @@
+---
+- name: 'install packages'
+  yum:
+    name:
+      - ipa-server
+      - ipa-server-dns
+
+
+- name: 'fix /etc/hosts'
+  lineinfile:
+    path: /etc/hosts
+    regexp: '^127.0.0.1\s*{{ ansible_fqdn }}'
+    line: '10.0.10.2    {{ ansible_fqdn }}'
+
+
+- name: 'check that ipa-server configured'
+  stat:
+    path: /etc/ipa/default.conf
+  register: ipa_config
+
+
+- name: 'stop and disable chronyd'
+  systemd:
+    name: chronyd
+    state: stopped
+    enabled: no
+
+
+- name: 'configure ipa server'
+  shell: "ipa-server-install --setup-dns --hostname {{ ansible_fqdn }} -n {{ ansible_domain }} -r {{ ansible_domain }} -p {{ dir_pass }} -a {{ admin_pass }} --ip-address=10.0.10.2 --forwarder=8.8.8.8 --no-reverse -U"
+  when: ipa_config.stat.exists == false
+
+
+- name: 'obtain Kerberos ticket'
+  shell: "echo -e '{{ admin_pass }}' | kinit admin"
+
+
+- name: 'add test user to IPA'
+  shell: "ipa user-add testuser --first=test --last=user --shell='/bin/bash' --password-expiration='20200101000000Z' --sshpubkey='{{ user_ssh_pub_key }}'"
+
+
+- name: 'fix httpd rewrite issue for vagrant'
+  copy:
+    src: ipa-rewrite.conf
+    dest: /etc/httpd/conf.d
+  notify: restart httpd

@@ -1,0 +1,41 @@
+---
+- hosts: ir
+  become: yes
+
+  roles:
+    - ir
+
+
+- hosts: cr
+  become: yes
+
+  roles:
+    - cr
+
+
+- hosts: c1
+  become: yes
+
+  roles:
+    - c1
+
+
+- hosts: c2
+  become: yes
+
+  roles:
+    - c2
+
+
+- hosts: s1
+  become: yes
+
+  roles:
+    - s1
+
+
+- hosts: s2
+  become: yes
+
+  roles:
+    - s2

@@ -1,0 +1,20 @@
+---
+- name: install packages
+  yum:
+    name:
+      - krb5-workstation
+
+
+- name: copy config files
+  copy:
+    src: krb5.conf
+    dest: /etc/
+
+
+- name: copy keytab file
+  copy:
+    src: krb5-{{ ansible_hostname }}.keytab
+    dest: /etc/krb5.keytab
+    mode: 0600
+    owner: root
+    group: root

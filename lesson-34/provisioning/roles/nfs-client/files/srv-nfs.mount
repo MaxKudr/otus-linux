@@ -1,0 +1,11 @@
+[Unit]
+Description=OTUS mount NFS3
+
+[Mount]
+What= server.otus.loc:/srv/nfs
+Where= /srv/nfs
+Type= nfs
+Options= vers=3
+
+[Install]
+WantedBy = multi-user.target

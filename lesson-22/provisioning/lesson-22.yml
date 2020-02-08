@@ -1,0 +1,27 @@
+---
+- hosts: ns1
+  become: yes
+
+  roles:
+    - ns-master
+
+
+- hosts: ns2
+  become: yes
+
+  roles:
+    - ns-slave
+
+
+- hosts: c1
+  become: yes
+
+  roles:
+    - ns-client
+
+
+- hosts: c2
+  become: yes
+
+  roles:
+    - ns-client

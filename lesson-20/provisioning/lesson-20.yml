@@ -1,0 +1,39 @@
+---
+- hosts: central-server
+  become: yes
+
+  tasks:
+    - import_tasks: central-server.yml
+
+  handlers:
+    - import_tasks: handlers/main.yml
+
+
+- hosts: central-router
+  become: yes
+
+  tasks:
+    - import_tasks: central-router.yml
+
+  handlers:
+    - import_tasks: handlers/main.yml
+
+
+- hosts: inet-router-1
+  become: yes
+
+  tasks:
+    - import_tasks: inet-router-1.yml
+
+  handlers:
+    - import_tasks: handlers/main.yml
+
+
+- hosts: inet-router-2
+  become: yes
+
+  tasks:
+    - import_tasks: inet-router-2.yml
+
+  handlers:
+    - import_tasks: handlers/main.yml

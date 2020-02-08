@@ -1,0 +1,88 @@
+---
+- block:
+  - name: 'zabbix-server | install repo'
+    yum:
+      name: 'https://repo.zabbix.com/zabbix/4.2/rhel/7/x86_64/zabbix-release-4.2-2.el7.noarch.rpm'
+      state: present
+
+
+  - name: 'zabbix-server | install packages'
+    yum:
+      name:
+        - zabbix-server-mysql
+        - zabbix-web-mysql
+        - MySQL-python
+        - policycoreutils
+      state: present
+
+
+  - name: 'zabbix-server | copy semodules'
+    copy: src='{{ item }}' dest='/tmp'
+    with_items:
+      - 'otus_zabbix.pp'
+      - 'otus_zabbix_http.pp'
+
+
+  - name: 'zabbix-server | install semodules'
+    command: 'semodule -i /tmp/{{ item }}'
+    with_items:
+      - 'otus_zabbix.pp'
+      - 'otus_zabbix_http.pp'
+
+
+  - name: 'zabbix-server | copy mysql dump'
+    copy:
+      src: 'zabbix.sql.gz'
+      dest: '/tmp'
+
+
+  - name: 'zabbix-server | import mysql db'
+    mysql_db:
+      name: zabbix
+      state: import
+      target: '/tmp/zabbix.sql.gz'
+
+
+  - name: 'zabbix-server | create mysql user'
+    mysql_user:
+      name: '{{ zabbix_db_user }}'
+      password: '{{ zabbix_db_pass }}'
+      host: 'localhost'
+      priv: 'zabbix.*:all'
+      state: present
+
+
+  - name: 'zabbix-server | copy server config'
+    template:
+      src: 'zabbix_server.conf.j2'
+      dest: '/etc/zabbix/zabbix_server.conf'
+    notify: restart zabbix-server
+
+
+  - name: 'zabbix-server | copy web server config'
+    template:
+      src: 'zabbix.conf.php.j2'
+      dest: '/etc/zabbix/web/zabbix.conf.php'
+
+
+  - name: 'zabbix-server | copy http server config'
+    copy:
+      src: 'zabbix.conf'
+      dest: '/etc/httpd/conf.d/zabbix.conf'
+    notify: restart httpd
+
+
+  - name: 'zabbix-server | enable and start service'
+    systemd:
+      name: zabbix-server
+      state: started
+      enabled: yes
+
+
+  - name: 'zabbix-server | enable and start httpd server'
+    systemd:
+      name: httpd
+      state: started
+      enabled: yes
+
+  tags: zabbix-server

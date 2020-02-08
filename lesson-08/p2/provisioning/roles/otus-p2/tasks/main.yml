@@ -1,0 +1,44 @@
+---
+- name: 'install EPEL repo'
+  yum:
+    name: epel-release
+    state: present
+
+
+- name: 'install packages'
+  yum:
+    name:
+      - spawn-fcgi
+      - httpd
+      - php-cli
+    state: present
+
+
+- name: 'remove spawn-fcgi init-script'
+  file:
+    path: '/etc/init.d/spawn-fcgi'
+    state: absent
+
+
+- name: 'copy spawn-fcgi systemd unit'
+  copy:
+    src: 'spawn-fcgi.service'
+    dest: '/etc/systemd/system/spawn-fcgi.service'
+
+
+- name: 'copy config of spawn-fcgi'
+  copy:
+    src: 'spawn-fcgi'
+    dest: '/etc/sysconfig/spawn-fcgi'
+
+
+- name: 'reload systemd'
+  systemd:
+    daemon_reload: yes
+
+
+- name: 'start spawn-fcgi service'
+  systemd:
+    name: spawn-fcgi
+    enabled: yes
+    state: started

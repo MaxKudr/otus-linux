@@ -1,0 +1,16 @@
+---
+- block:
+  - name: 'elasticsearch : install packages'
+    yum:
+      name: elasticsearch
+      state: present
+      disable_gpg_check: yes
+
+
+  - name: 'elasticsearch : start and enable service'
+    systemd:
+      name: elasticsearch
+      state: started
+      enabled: yes
+
+  tags: elasticsearch

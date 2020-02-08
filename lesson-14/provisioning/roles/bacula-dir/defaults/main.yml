@@ -1,0 +1,4 @@
+---
+bacula_dir_pass: 'bacula-dir-password'
+bacula_sd_pass: 'bacula-sd-password'
+bacula_fd_pass: 'bacula-fd-password'

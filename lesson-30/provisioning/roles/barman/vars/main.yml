@@ -1,0 +1,5 @@
+---
+pg_backup_host: '10.10.10.2'
+pg_backup_port: '5432'
+pg_barman_user: 'barman'
+pg_barman_pass: '123456'

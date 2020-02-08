@@ -1,0 +1,9 @@
+---
+- hosts: lesson-13
+  become: yes
+
+  roles:
+    - mysql
+    - zabbix-server
+    - zabbix-agent
+    - grafana

@@ -1,0 +1,22 @@
+---
+- hosts: master
+  become: yes
+
+  roles:
+    - postgresql
+    - postgresql-master
+
+
+- hosts: slave
+  become: yes
+
+  roles:
+    - postgresql
+    - postgresql-slave
+
+
+- hosts: barman
+  become: yes
+
+  roles:
+    - barman

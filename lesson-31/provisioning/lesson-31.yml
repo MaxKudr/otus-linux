@@ -1,0 +1,19 @@
+---
+- hosts:
+    - pg1
+    - pg2
+    - pg3
+  become: yes
+
+  roles:
+    - postgresql
+    - patroni
+    - pgbouncer
+
+
+- hosts: proxy
+  become: yes
+
+  roles:
+    - consul
+    - haproxy

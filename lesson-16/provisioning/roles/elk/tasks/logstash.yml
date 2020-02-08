@@ -1,0 +1,26 @@
+---
+- block:
+  - name: 'logstash : install package'
+    yum:
+      name:
+        - logstash
+        - filebeat
+      state: present
+
+
+  - name: 'logstash : copy configs'
+    copy: src="{{ item }}" dest=/etc/logstash/conf.d
+    with_items:
+      - logstash/02-beats-input.conf
+      - logstash/10-syslog-filter.conf
+      - logstash/30-elasticsearch-output.conf
+    notify: restart logstash
+
+
+  - name: 'logstash : start and enable service'
+    systemd:
+      name: logstash
+      state: started
+      enabled: yes
+
+  tags: logstash

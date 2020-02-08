@@ -1,0 +1,72 @@
+---
+- name: install EPEL repo
+  yum:
+    name: epel-release
+    state: present
+
+
+- name: install packages
+  yum:
+    name:
+      - gcc
+      - python-devel
+      - python-psycopg2
+      - python2-pip
+    state: present
+
+
+- name: upgrade pip and setuptools
+  pip:
+    name:
+      - pip
+      - setuptools
+    state: latest
+
+
+- name: install additional python packages
+  pip:
+    name:
+      - wheel
+      - python-consul
+
+
+- name: install patroni
+  pip:
+    name:
+      - patroni
+
+
+- name: install Patroni systemd service
+  copy:
+    src: patroni.service
+    dest: /etc/systemd/system/
+
+
+- name: reload systemd
+  systemd:
+    daemon_reload: yes
+
+
+- name: create directories
+  file:
+    path: '{{ item }}'
+    state: directory
+    owner: postgres
+    group: postgres
+    mode: 0700
+  with_items:
+    - /var/lib/patroni/data
+
+
+- name: copy config file
+  template:
+    src: patroni.yml.j2
+    dest: /etc/patroni.yml
+  notify: restart patroni
+
+
+- name: start and enable service
+  systemd:
+    name: patroni
+    state: started
+    enabled: true

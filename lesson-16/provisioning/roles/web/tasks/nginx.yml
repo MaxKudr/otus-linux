@@ -1,0 +1,18 @@
+---
+- name: 'nginx : install epel'
+  yum:
+    name: epel-release
+    state: present
+
+
+- name: 'nginx : install packages'
+  yum:
+    name: nginx
+    state: present
+
+
+- name: 'nginx : start and enable nginx service'
+  systemd:
+    name: nginx
+    state: started
+    enabled: yes

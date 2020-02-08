@@ -1,0 +1,30 @@
+---
+- name: 'install packages'
+  yum:
+    name: ipa-client
+    state: present
+
+
+- name: 'check that ipa-client configured'
+  stat:
+    path: /etc/ipa/default.conf
+  register: ipa_config
+
+
+- name: 'fix /etc/hosts'
+  lineinfile:
+    path: /etc/hosts
+    regexp: '^10.0.10.2'
+    line: '10.0.10.2    ipa.otus.local'
+
+
+- name: 'configure ipa client'
+  shell: 'ipa-client-install --domain otus.local --server ipa.otus.local --mkhomedir --force-ntpd --principal admin --password "{{ admin_pass }}" --unattended'
+  when: ipa_config.stat.exists == false
+
+
+- name: 'start and enable oddjobd'
+  systemd:
+    name: oddjobd
+    state: started
+    enabled: yes

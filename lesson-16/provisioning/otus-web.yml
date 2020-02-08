@@ -1,0 +1,5 @@
+---
+- hosts: otus-web
+  become: yes
+  roles:
+    - web

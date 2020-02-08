@@ -1,0 +1,28 @@
+---
+- name: install PostgreSQL repo
+  yum:
+    name: https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm
+    state: present
+
+
+- name: install packages
+  yum:
+    name: pgbouncer
+    state: present
+
+
+- name: copy config
+  template:
+    src: '{{ item }}.j2'
+    dest: '/etc/pgbouncer/{{ item }}'
+  with_items:
+    - pgbouncer.ini
+    - userlist.txt 
+  notify: restart pgbouncer
+
+
+- name: start and enable service
+  systemd:
+    name: pgbouncer
+    state: restarted
+    enabled: yes

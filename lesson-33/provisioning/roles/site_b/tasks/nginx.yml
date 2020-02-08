@@ -1,0 +1,6 @@
+---
+- name: copy config file
+  copy:
+    src: siteb.conf
+    dest: /etc/nginx/conf.d/
+  notify: restart nginx

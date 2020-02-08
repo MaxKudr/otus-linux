@@ -1,0 +1,7 @@
+set ssl_starttls = "no"
+set pop_host = "pop://10.10.10.1:110"
+set pop_user = "otus1"
+set pop_pass = "otus"
+set smtp_url = "smtp://10.10.10.1:25"
+set from = "otus1@otus.local"
+set realname = "OTUS1"

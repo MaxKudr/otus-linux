@@ -1,0 +1,6 @@
+---
+- hosts: www
+  become: yes
+
+  roles:
+    - www

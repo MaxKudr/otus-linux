@@ -1,0 +1,46 @@
+---
+- name: install packages
+  yum:
+    name:
+      nfs-utils
+    state: present
+
+
+- name: copy config file
+  copy:
+    src: nfs.conf
+    dest: /etc/
+  notify: restart nfs-client
+
+
+- name: create nfs directory
+  file:
+    path: /srv/nfs
+    state: directory
+
+
+- name: add srv record to hosts
+  lineinfile:
+    path: /etc/hosts
+    regexp: '^10.10.10.2'
+    line: '10.10.10.2   server.otus.loc'
+
+
+- name: restart nfs-client.target
+  systemd:
+    name: nfs-client.target
+    state: restarted
+
+
+- name: copy automount services
+  copy: src={{ item }} dest=/etc/systemd/system
+  with_items:
+    - srv-nfs.mount
+    - srv-nfs.automount
+
+
+- name: start and enable automount service
+  systemd:
+    name: srv-nfs.automount
+    state: started
+    enabled: yes

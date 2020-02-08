@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+/sbin/ip l set down br0
+/sbinbrctl delif br0 tap0
+/sbin/ip l set down tap0

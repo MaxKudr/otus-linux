@@ -1,0 +1,11 @@
+---
+- hosts: lesson-06
+  become: yes
+
+  vars:
+    typora_version: '0.9.75'
+    typora_release: '1'
+
+  roles:
+    - otus_build
+    - otus_repo

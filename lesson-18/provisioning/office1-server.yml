@@ -1,0 +1,26 @@
+---
+- hosts: office1-server
+  become: yes
+
+  tasks:
+  - name: 'disable default router for eth0'
+    lineinfile:
+      path: /etc/sysconfig/network-scripts/ifcfg-eth0
+      regexp: '^DEFROUTE='
+      line: DEFROUTE="no"
+    notify: restart network
+
+
+  - name: 'add default route for eth1'
+    lineinfile:
+      path: /etc/sysconfig/network-scripts/ifcfg-eth1
+      regexp: '^GATEWAY='
+      line: GATEWAY=192.168.2.254
+    notify: restart network
+
+
+  handlers:
+  - name: restart network
+    systemd:
+      name: network
+      state: restarted

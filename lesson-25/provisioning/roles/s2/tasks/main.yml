@@ -1,0 +1,93 @@
+---
+- name: install EPEL
+  yum:
+    name: epel-release
+    state: present
+
+
+- name: install packages
+  yum:
+    name:
+      - openvpn
+      - bridge-utils
+    state: present
+
+
+# Configure openvpn client
+
+- name: copy openvpn-client config
+  copy:
+    src: otus.local-client.conf
+    dest: /etc/openvpn/client/otus.local.conf
+  notify: restart openvpn-client
+
+
+- name: start and enable service
+  systemd:
+    name: openvpn-client@otus.local
+    state: started
+    enabled: yes
+
+
+# Configure openvpn server
+
+- name: configure bridge interface
+  copy:
+    src: ifcfg-br0
+    dest: /etc/sysconfig/network-scripts/
+  notify: restart network
+
+
+- name: copy openvpn-server config
+  copy:
+    src: otus.local-server.conf
+    dest: /etc/openvpn/server/otus.local.conf
+  notify: restart openvpn-server
+
+
+- name: copy openvpn-server tap up/down scripts
+  copy: src={{ item }} dest=/etc/openvpn/server/scripts/ mode=0755
+  with_items:
+    - bridge-up
+    - bridge-down
+
+
+- name: copy certs and keys
+  copy: src=certs/{{ item }} dest=/etc/openvpn/server/certs/
+  with_items:
+    - ca.crt
+    - s2.crt
+    - s2.key
+    - dh.pem
+  notify: restart openvpn-server
+
+
+- name: start and enable service
+  systemd:
+    name: openvpn-server@otus.local
+    state: started
+    enabled: yes
+
+
+- name: start and enable firewalld
+  systemd:
+    name: firewalld
+    state: started
+    enabled: yes
+
+
+- name: configure firewalld rules
+  firewalld:
+    service: openvpn
+    state: enabled
+    permanent: yes
+    immediate: yes
+
+
+- name: enable forwarding
+  sysctl:
+    name: net.ipv4.ip_forward
+    value: 1
+    sysctl_set: yes
+    state: present
+    reload: yes

@@ -1,0 +1,64 @@
+---
+- name: 'instla Java 11'
+  yum:
+    name: java-11-openjdk
+    state: present
+
+
+- name: 'create user jira'
+  user:
+    name: jira
+    uid: 9000
+
+
+- name: 'create Jira software app directory'
+  file:
+    path: '/usr/share/jira-software'
+    state: directory
+    mode: 0700
+    owner: jira
+    group: jira
+
+
+- name: 'download and unpack Jira software'
+  unarchive:
+    src: http://product-downloads.atlassian.com/software/jira/downloads/atlassian-jira-software-8.4.0.tar.gz
+    dest: /usr/share/jira-software
+    remote_src: yes
+    owner: jira
+    group: jira
+    extra_opts: [ --strip-components=1 ]
+
+
+- name: 'create Jira software home directory'
+  file:
+    path: '/var/lib/jira-software'
+    state: directory
+    mode: 0700
+    owner: jira
+    group: jira
+
+
+- name: 'update config for home directory'
+  lineinfile:
+    path: '/usr/share/jira-software/atlassian-jira/WEB-INF/classes/jira-application.properties'
+    regexp: '^jira.home'
+    line: 'jira.home = /var/lib/jira-software'
+
+
+- name: 'copy Jira systemd unit'
+  copy:
+    src: 'jira-software.service'
+    dest: '/etc/systemd/system/jira-software.service'
+
+
+- name: 'reload systemd'
+  systemd:
+    daemon_reload: yes
+
+
+- name: 'start Jira Software app'
+  systemd:
+    name: jira-software
+    enabled: yes
+    state: started

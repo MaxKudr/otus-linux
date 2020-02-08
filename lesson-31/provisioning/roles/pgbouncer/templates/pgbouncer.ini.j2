@@ -1,0 +1,12 @@
+[databases]
+* = host={{ ansible_eth1.ipv4.address }} port=5432 auth_user=postgres
+
+[pgbouncer]
+logfile = /var/log/pgbouncer/pgbouncer.log
+pidfile = /var/run/pgbouncer/pgbouncer.pid
+listen_addr = {{ ansible_eth1.ipv4.address }}
+listen_port = 6432
+auth_type = md5
+auth_file = /etc/pgbouncer/userlist.txt
+admin_users = postgres
+stats_users = stats, postgres

@@ -1,0 +1,56 @@
+---
+- name: install packages
+  yum:
+    name:
+      nfs-utils
+    state: present
+
+
+- name: copy config file
+  copy:
+    src: nfs.conf
+    dest: /etc/
+  notify: restart nfs
+
+
+- name: copy exports file
+  copy:
+    src: exports
+    dest: /etc/
+  notify: restart nfs
+
+
+- name: create shared folder
+  file:
+    path: /srv/nfs
+    state: directory
+
+
+- name: create upload folder
+  file:
+    path: /srv/nfs/upload
+    state: directory
+    mode: 0777
+
+
+- name: create test file
+  file:
+    path: /srv/nfs/otus.ok
+    state: touch
+
+
+- name: start and enable service
+  systemd:
+    name: nfs
+    state: started
+    enabled: yes
+
+
+- name: configure firewalld
+  firewalld: port={{ item }} state=enabled permanent=yes immediate=yes
+  with_items:
+    - 111/tcp
+    - 111/udp
+    - 2049/tcp
+    - 20048/udp
+

@@ -1,0 +1,11 @@
+---
+- name: install NodeJS repo
+  yum:
+    name: https://rpm.nodesource.com/pub_10.x/el/7/x86_64/nodesource-release-el7-1.noarch.rpm
+    state: present
+
+
+- name: install packages
+  yum:
+    name: nodejs
+    state: present

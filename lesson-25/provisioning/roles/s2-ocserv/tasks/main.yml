@@ -1,0 +1,71 @@
+---
+- name: install EPEL
+  yum:
+    name: epel-release
+    state: present
+
+
+- name: install packages
+  yum:
+    name: ocserv
+    state: present
+
+
+- name: copy certs and keys
+  copy: src=certs/{{ item.src }} dest=/etc/pki/ocserv/{{ item.dest }}
+  with_items:
+    - { src: 'ca.crt', dest: 'cacerts/' }
+    - { src: 's2.crt', dest: 'public/' }
+    - { src: 's2.key', dest: 'private/' }
+
+
+- name: add VPN user
+  user:
+    name: otus-vpn
+    password: '$1$VoQQMSSc$75WYKHfg5Q7wH9fJZ3YIr1'
+
+
+- name: copy ocserv config
+  copy:
+    src: ocserv.conf
+    dest: /etc/ocserv/
+  notify: restart ocserv
+
+
+- name: start and enable service
+  systemd:
+    name: ocserv
+    state: started
+    enabled: yes
+
+
+- name: enable firewalld service
+  systemd:
+    name: firewalld
+    state: started
+    enabled: yes
+
+
+- name: configure firewalld rules
+  firewalld: port={{ item }} permanent=yes state=enabled immediate=yes
+  with_items:
+    - 443/tcp
+    - 443/udp
+
+
+- name: enable masquerading
+  firewalld:
+    masquerade: yes
+    state: enabled
+    permanent: yes
+    immediate: yes
+
+
+- name: enable forwarding
+  sysctl:
+    name: net.ipv4.ip_forward
+    value: 1
+    sysctl_set: yes
+    state: present
+
+    reload: yes

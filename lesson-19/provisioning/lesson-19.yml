@@ -1,0 +1,13 @@
+---
+- hosts: ipa.otus.local
+  become: yes
+
+  roles:
+    - ipa_server
+
+
+- hosts: client.otus.local
+  become: yes
+
+  roles:
+    - ipa_client

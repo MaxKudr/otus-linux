@@ -1,0 +1,93 @@
+---
+- hosts: lesson-03
+  become: yes
+  tasks:
+    - name: 'remove oldroot volume'
+      lvol:
+        vg: 'VolGroup00'
+        lv: 'oldroot'
+        state: absent
+        force: yes
+
+
+#    - name: 'resize LogVol00 to 8G'
+#      lvol:
+#        vg: 'VolGroup00'
+#        lv: 'LogVol00'
+#        size: 8G
+#        resizefs: yes
+
+
+    - name: 'check LogVol00'
+      shell: 'lvs -S lv_name=LogVol00 -o devices --noheadings'
+      register: lvm
+      changed_when: false
+
+
+    - name: 'move LogVol00 to sda3'
+      shell: 'pvmove -q -n LogVol00 /dev/sdb /dev/sda3'
+      when: lvm.stdout is match('.*sdb.*')
+
+
+    - name: 'resize LogVol00'
+      lvol:
+        vg: 'VolGroup00'
+        lv: 'LogVol00'
+        size: '8G'
+
+
+    - name: 'resize filesystem on LogVol00'
+      filesystem:
+        dev: '/dev/VolGroup00/LogVol00'
+        fstype: 'xfs'
+        resizefs: yes
+
+
+    - name: 'check home'
+      shell: 'lvs -S lv_name=home -o devices --noheadings'
+      register: lvm
+      changed_when: false
+
+
+    - name: 'move home to sda3'
+      shell: 'pvmove -q -n home /dev/sdb /dev/sda3'
+      when: lvm.stdout is match('.*sdb.*')
+
+
+    - name: 'resize home'
+      lvol:
+        vg: 'VolGroup00'
+        lv: 'home'
+        size: '2G'
+
+
+    - name: 'resize filesystem on home'
+      filesystem:
+        dev: '/dev/VolGroup00/home'
+        fstype: 'xfs'
+        resizefs: yes
+
+
+    - name: 'check var'
+      shell: 'lvs -S lv_name=var -o devices --noheadings'
+      register: lvm
+      changed_when: false
+
+
+    - name: 'move var to sda3'
+      shell: 'pvmove -q -n var /dev/sdb /dev/sda3'
+      when: lvm.stdout is match('.*sdb.*')
+
+
+    - name: 'resize var'
+      lvol:
+        vg: 'VolGroup00'
+        lv: 'var'
+        size: '2G'
+
+
+    - name: 'resize filesystem on var'
+      filesystem:
+        dev: '/dev/VolGroup00/var'
+        fstype: 'xfs'
+        resizefs: yes

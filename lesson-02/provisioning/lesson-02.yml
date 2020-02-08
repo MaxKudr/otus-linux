@@ -1,0 +1,166 @@
+---
+- hosts: lesson-02
+  become: yes
+  tasks:
+    - name: 'install packages'
+      yum:
+        name:
+          - mdadm
+          - xfsdump
+        state: present
+
+
+    - name: 'create grub partition on disks'
+      parted: label=gpt state=present device='/dev/{{ item }}' number=1 flags='bios_grub' part_end=1MiB
+      with_items:
+        - 'sdb'
+        - 'sdc'
+        - 'sdd'
+
+
+    - name: 'create boot partition on disks'
+      parted: label=gpt state=present device='/dev/{{ item }}' number=2 flags='raid' part_start=1MiB part_end=500MiB
+      with_items:
+        - 'sdb'
+        - 'sdc'
+        - 'sdd'
+
+    - name: 'create root partition on disks'
+      parted: label=gpt state=present device='/dev/{{ item }}' number=3 flags='raid' part_start=500MiB part_end=100%
+      with_items:
+        - 'sdb'
+        - 'sdc'
+        - 'sdd'
+
+
+    - name: 'check exist md2 device'
+      stat:
+        path: '/dev/md2'
+      register: md_device
+
+
+    - name: 'create md2 raid5 device'
+      shell: 'yes | mdadm -C /dev/md2 --assume-clean -l 5 -n 3 /dev/sdb2 /dev/sdc2 /dev/sdd2'
+      when: md_device.stat.exists == false
+
+
+    - name: 'check exist md3 device'
+      stat:
+        path: '/dev/md3'
+      register: md_device
+
+
+    - name: 'create md3 raid5 device'
+      shell: 'yes | mdadm -C /dev/md3 --assume-clean -l 5 -n 3 /dev/sdb3 /dev/sdc3 /dev/sdd3'
+      when: md_device.stat.exists == false
+
+
+    - name: 'create filesystems on new md devices'
+      filesystem: fstype={{ item.fs }} dev={{ item.dev }}
+      with_items:
+        - { dev: '/dev/md2', fs: 'ext2' }
+        - { dev: '/dev/md3', fs: 'xfs' }
+
+
+    - name: 'mount new root partition'
+      mount:
+        path: '/mnt'
+        src: '/dev/md3'
+        fstype: xfs
+        state: mounted
+        
+
+    - name: 'check bin directory'
+      stat:
+        path: '/mnt/usr/bin'
+      register: need_dump
+
+
+    - name: 'clone root fs to new root'
+      shell: 'xfsdump -J - / | xfsrestore -J - /mnt'
+      when: need_dump.stat.exists == false
+
+
+    - name: 'remove boot directory in new root'
+      file:
+        path: '/mnt/boot/'
+        state: absent
+
+
+    - name: 'mount md2 device as boot partition'
+      mount:
+        path: '/mnt/boot'
+        src: '/dev/md2'
+        fstype: ext2
+        state: mounted
+
+
+    - name: 'copy files from original boot to new boot'
+      copy:
+        src: '/boot/'
+        dest: '/mnt/boot/'
+        remote_src: yes
+
+
+    - name: 'mount dev,sys,proc for chroot'
+      mount: path='/mnt/{{ item }}' src='/{{ item }}' fstype=none opts=bind state=mounted
+      with_items:
+        - 'dev'
+        - 'proc'
+        - 'sys'
+
+
+    - name: 'install grub on md disks'
+      shell: 'chroot /mnt grub2-install /dev/{{ item }}'
+      with_items:
+        - 'sdb'
+        - 'sdc'
+        - 'sdd'
+
+
+    - name: 'update default grub config'
+      lineinfile:
+        path: '/mnt/etc/default/grub'
+        regexp: '^GRUB_CMDLINE_LINUX="(.*)"'
+        line: 'GRUB_CMDLINE_LINUX="rd.auto=1 \1"'
+        backrefs: yes
+
+
+    - name: 'install grub config'
+      shell: 'chroot /mnt grub2-mkconfig -o /boot/grub2/grub.cfg'
+
+
+    - name: 'get UUID for md2 partition'
+      shell: 'blkid -s UUID /dev/md2 | sed -r "s/.*\"(.*)\"/\1/"'
+      register: md2_uuid
+
+
+    - name: 'get UUID for md3 partition'
+      shell: 'blkid -s UUID /dev/md3 | sed -r "s/.*\"(.*)\"/\1/"'
+      register: md3_uuid
+
+
+    - name: 'update fstab'
+      template:
+        src: 'fstab'
+        dest: '/mnt/etc/fstab'
+
+
+    - name: 'update initramfs'
+      shell: 'chroot /mnt dracut -f'
+
+
+    - name: 'stop sys-fs-fuse-connections.mount service'
+      service:
+        name: 'sys-fs-fuse-connections.mount'
+        state: stopped
+
+
+    - name: 'umount partitions'
+      mount: path='{{ item }}' state=unmounted
+      with_items:
+        - '/mnt/dev'
+        - '/mnt/proc'
+        - '/mnt/sys'
+        - '/mnt/boot'
+        - '/mnt'

@@ -1,0 +1,66 @@
+---
+- name: check exist pg_hba.conf
+  stat:
+    path: /var/lib/pgsql/12/data/pg_hba.conf
+  register: pg_hba
+
+
+- name: init postgresql db
+  command: '/usr/pgsql-12/bin/postgresql-12-setup initdb'
+  when: pg_hba.stat.exists == false
+
+
+- name: copy configs
+  copy: src={{ item }} dest=/var/lib/pgsql/12/data/
+  with_items:
+    - pg_hba.conf
+    - postgresql.conf
+  notify: restart postgresql
+
+
+- name: start service
+  systemd:
+    name: postgresql-12
+    state: started
+
+
+- name: create replication user
+  become_user: postgres
+  postgresql_user:
+    name: repluser
+    password: '{{ repl_pass }}'
+    encrypted: yes
+    role_attr_flags: replication
+
+
+- name: create barman user
+  become_user: postgres
+  postgresql_user:
+    name: '{{ backup_user }}'
+    password: '{{ backup_pass }}'
+    encrypted: yes
+    role_attr_flags: superuser
+
+
+- name: check replication slot
+  become_user: postgres
+  command: psql -c "select slot_name from pg_replication_slots where slot_name='replica_slot'";
+  register: replication_slot
+
+
+- name: create replication slot
+  become_user: postgres
+  command: psql -c "select pg_create_physical_replication_slot('replica_slot')"
+  when: replication_slot.stdout is search ('0 rows')
+
+
+- name: check barman slot
+  become_user: postgres
+  command: psql -c "select slot_name from pg_replication_slots where slot_name='barman_slot'";
+  register: barman_slot
+
+
+- name: create barman slot
+  become_user: postgres
+  command: psql -c "select pg_create_physical_replication_slot('barman_slot')"
+  when: barman_slot.stdout is search ('0 rows')

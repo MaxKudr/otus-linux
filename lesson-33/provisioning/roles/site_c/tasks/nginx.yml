@@ -1,0 +1,13 @@
+---
+- name: configure SELinux
+  seboolean:
+    name: httpd_can_network_connect
+    state: yes
+    persistent: yes
+
+
+- name: copy config file
+  copy:
+    src: sitec.conf
+    dest: /etc/nginx/conf.d/
+  notify: restart nginx

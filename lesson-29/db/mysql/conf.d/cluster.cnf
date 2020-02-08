@@ -1,0 +1,10 @@
+[mysqld]
+server_id = 0
+report-host = 0.0.0.0
+bind-address = 0.0.0.0
+mysqlx_bind_address = 0.0.0.0
+
+binlog_checksum = none
+
+gtid_mode = on
+enforce_gtid_consistency = on

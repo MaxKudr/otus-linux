@@ -1,0 +1,19 @@
+---
+- name: 'install packages'
+  yum:
+    name: bind
+    state: present
+
+
+- name: 'copy config'
+  copy:
+    src: named.conf
+    dest: /etc/
+  notify: restart named
+
+
+- name: 'start and enable service'
+  systemd:
+    name: named
+    state: started
+    enabled: yes

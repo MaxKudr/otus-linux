@@ -1,0 +1,29 @@
+---
+- name: install packages
+  yum:
+    name: unzip
+    state: present
+
+
+- name: create site directory
+  file:
+    path: /srv/www/sitea/
+    state: directory
+
+
+- name: copy config
+  copy: src={{ item.src }} dest={{ item.dest }}
+  with_items:
+    - { src: 'sitea.conf', dest: '/etc/nginx/conf.d/' }
+    - { src: 'php.conf', dest: '/etc/nginx/' }
+  notify: restart nginx
+
+ 
+- name: configure site
+  unarchive:
+    src: files/sitea.zip
+    dest: /srv/www/sitea/
+
+
+- name: restore SELinux context
+  command: restorecon -ir /srv/www/sitea

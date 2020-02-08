@@ -1,0 +1,42 @@
+---
+- name: 'install pakages'
+  yum:
+    name:
+      - mock
+      - rpm-build
+    state: present
+
+
+- name: 'copy spec file'
+  template:
+    src: 'typora.spec.j2'
+    dest: '/tmp/typora.spec'
+
+
+- name: 'check typora src rpm'
+  stat:
+    path: '/root/rpmbuild/SRPMS/typora-{{ typora_version }}-{{ typora_release }}.el7.src.rpm'
+  register: typora_src_rpm
+
+
+- name: 'check typora rpm'
+  stat:
+    path: '/var/lib/mock/epel-7-x86_64/result/typora-{{ typora_version }}-{{ typora_release }}.el7.x86_64.rpm'
+  register: typora_rpm
+
+
+- name: 'build src rpm file by rpmbuild'
+  shell: 'rpmbuild -bs /tmp/typora.spec'
+  when: typora_src_rpm.stat.exists == false
+
+
+- name: 'copy rpm file'
+  copy:
+   src: '/root/rpmbuild/SRPMS/typora-{{ typora_version }}-{{ typora_release }}.el7.src.rpm'
+   dest: '/tmp/typora-{{ typora_version }}-{{ typora_release }}.el7.src.rpm'
+   remote_src: yes
+
+
+- name: 'build rpm file by mock'
+  shell: 'mock /tmp/typora-{{ typora_version }}-{{ typora_release }}.el7.src.rpm'
+  when: typora_rpm.stat.exists == false

@@ -1,0 +1,16 @@
+---
+- include_tasks: postfix.yml
+- include_tasks: dovecot.yml
+
+
+- name: install packages
+  yum:
+    name: telnet
+    state: present
+
+
+- name: create test users
+  user: name={{ item }} password="$1$bot7jKkn$ONxshiTeAd4U0RAjaJsjx0"
+  with_items:
+    - otus1
+    - otus2

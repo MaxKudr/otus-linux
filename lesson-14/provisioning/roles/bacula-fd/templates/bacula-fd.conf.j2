@@ -1,0 +1,22 @@
+Director {
+	Name = bacula-dir
+	Password = "{{ bacula_fd_pass }}"
+}
+
+FileDaemon {
+	Name = bacula-fd
+	FDport = 9102
+	WorkingDirectory = /var/spool/bacula
+	Pid Directory = /var/run
+	Maximum Concurrent Jobs = 20
+
+	PKI Signatures = yes
+	PKI Encryption = yes
+	PKI Keypair = "/etc/bacula/otus-client.pem"
+	PKI Master Key = "/etc/bacula/bacula-dir.crt"
+}
+
+Messages {
+	Name = Standard
+	director = bacula-dir = all, !skipped, !restored
+}

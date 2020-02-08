@@ -1,0 +1,10 @@
+[Unit]
+Description=OTUS mount NFS3
+Requires=network-online.target
+
+[Automount]
+Where=/srv/nfs
+TimeoutIdleSec=60
+
+[Install]
+WantedBy = multi-user.target

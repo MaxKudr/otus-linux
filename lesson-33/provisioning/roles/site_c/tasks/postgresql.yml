@@ -1,0 +1,29 @@
+---
+- name: copy dump
+  copy:
+    src: sitec.sql
+    dest: /tmp/
+
+
+- name: create database
+  become_user: postgres
+  postgresql_db:
+    name: wjs
+
+
+- name: create user
+  become_user: postgres
+  postgresql_user:
+    db: wjs
+    name: wjs
+    password: wjs
+    encrypted: yes
+    priv: ALL
+
+
+- name: import database
+  become_user: postgres
+  postgresql_db:
+    name: wjs
+    state: restore
+    target: /tmp/sitec.sql

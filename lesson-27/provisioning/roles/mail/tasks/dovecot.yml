@@ -1,0 +1,34 @@
+---
+- name: install packages
+  yum:
+    name: dovecot
+    state: present
+
+
+- name: copy config files
+  copy: src=dovecot{{ item.src }} dest=/etc/dovecot{{ item.dest }}
+  with_items:
+    - { src: '/dovecot.conf', dest: '/' }
+    - { src: '/conf.d/10-auth.conf', dest: '/conf.d/' }
+    - { src: '/conf.d/10-director.conf', dest: '/conf.d/' }
+    - { src: '/conf.d/10-logging.conf', dest: '/conf.d/' }
+    - { src: '/conf.d/10-mail.conf', dest: '/conf.d/' }
+    - { src: '/conf.d/10-master.conf', dest: '/conf.d/' }
+    - { src: '/conf.d/10-ssl.conf', dest: '/conf.d/' }
+    - { src: '/conf.d/15-lda.conf', dest: '/conf.d/' }
+    - { src: '/conf.d/15-mailboxes.conf', dest: '/conf.d/' }
+    - { src: '/conf.d/20-imap.conf', dest: '/conf.d/' }
+    - { src: '/conf.d/20-lmtp.conf', dest: '/conf.d/' }
+    - { src: '/conf.d/20-pop3.conf', dest: '/conf.d/' }
+    - { src: '/conf.d/90-acl.conf', dest: '/conf.d/' }
+    - { src: '/conf.d/90-plugin.conf', dest: '/conf.d/' }
+    - { src: '/conf.d/90-quota.conf', dest: '/conf.d/' }
+    - { src: '/conf.d/auth-system.conf.ext', dest: '/conf.d/' }
+  notify: restart dovecot
+
+
+- name: start and enable service
+  systemd:
+    name: dovecot
+    state: started
+    enabled: yes

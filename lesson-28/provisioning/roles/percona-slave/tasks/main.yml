@@ -1,0 +1,42 @@
+---
+- name: copy dump to temporary file
+  copy:
+    src: bet.dmp.gz
+    dest: /tmp/
+
+
+- name: import db
+  mysql_db:
+    state: import
+    name: bet
+    login_password: '{{ mysql_root_password }}'
+    target: /tmp/bet.dmp.gz
+
+
+- name: copy replica config file
+  copy:
+    src: replica.cnf
+    dest: /etc/my.cnf.d/
+
+
+- name: restart mysql
+  systemd:
+    name: mysqld
+    state: restarted
+
+
+- name: configure replica
+  mysql_replication:
+    login_password: '{{ mysql_root_password }}'
+    mode: changemaster
+    master_host: 10.10.10.1
+    master_port: 3306
+    master_user: replica
+    master_password: '{{ mysql_replica_password }}'
+    master_auto_position: yes
+
+
+- name: start replica
+  mysql_replication:
+    login_password: '{{ mysql_root_password }}'
+    mode: startslave

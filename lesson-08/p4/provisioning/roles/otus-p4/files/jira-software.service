@@ -1,0 +1,14 @@
+[Unit]
+Description=Atlassioan Jira Software application
+After=network.target syslog.target
+
+[Service]
+Type=forking
+PIDFile=/usr/share/jira-software/work/catalina.pid
+ExecStart=/usr/share/jira-software/bin/start-jira.sh
+ExecStop=/usr/share/jira-software/bin/stop-jira.sh
+User=jira
+Group=jira
+
+[Install]
+WantedBy=multi-user.target

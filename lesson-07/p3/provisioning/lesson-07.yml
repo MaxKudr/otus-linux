@@ -1,0 +1,20 @@
+---
+- hosts: lesson-07-p3
+  become: yes
+
+  tasks:
+  - name: 'create TUX module folder'
+    file:
+      path: '/usr/lib/dracut/modules.d/00tux'
+      state: directory
+
+
+  - name: 'install modules files'
+    copy: src={{ item.src }} dest={{ item.dest }} mode=0755
+    with_items:
+      - { src: 'module-setup.sh', dest: '/usr/lib/dracut/modules.d/00tux/module-setup.sh' }
+      - { src: 'tux.sh', dest: '/usr/lib/dracut/modules.d/00tux/tux.sh' }
+
+
+  - name: 'rebuild initrd'
+    command: 'dracut -f'

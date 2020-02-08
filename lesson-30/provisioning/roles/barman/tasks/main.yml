@@ -1,0 +1,52 @@
+---
+- name: install EPEL repo
+  yum:
+    name: epel-release
+    state: present
+
+
+- name: install PostgreSQL repos
+  yum:
+    name: https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm
+    state: present
+
+
+- name: install packages
+  yum:
+    name:
+      - barman
+      - postgresql12
+    state: present
+
+
+- name: copy password file
+  template:
+    src: pgpass.j2
+    dest: /var/lib/barman/.pgpass
+    owner: barman
+    group: barman
+    mode: 0600
+
+
+- name: copy config file
+  template:
+    src: slave.conf.j2
+    dest: /etc/barman.d/slave.conf
+
+
+- name: create .ssh directory
+  file:
+    path: /var/lib/barman/.ssh
+    state: directory
+    mode: 0700
+    owner: barman
+    group: barman
+
+
+- name: create authorized keys
+  copy:
+    src: authorized_keys
+    dest: /var/lib/barman/.ssh/
+    mode: 0600
+    owner: barman
+    group: barman

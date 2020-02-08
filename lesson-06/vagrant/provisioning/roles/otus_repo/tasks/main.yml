@@ -1,0 +1,46 @@
+---
+- name: 'install epel repo'
+  yum:
+    name: epel-release
+    state: present
+
+
+- name: 'install packages'
+  yum:
+    name:
+      - nginx
+      - createrepo
+    state: present
+
+
+- name: 'copy nginx config'
+  template:
+    src: 'nginx.conf.j2'
+    dest: /etc/nginx/nginx.conf
+  notify: nginx reload
+
+
+- name: 'enable nginx service'
+  service:
+    name: nginx
+    state: started
+    enabled: true
+
+
+- name: 'create repo dir'
+  file:
+    path: '/usr/share/nginx/html/repos/otus/x86_64/Packages/'
+    state: directory
+
+
+- name: 'copy typora rpm to repo'
+  copy:
+    src: '/var/lib/mock/epel-7-x86_64/result/typora-{{ typora_version }}-{{ typora_release }}.el7.x86_64.rpm'
+    dest: '/usr/share/nginx/html/repos/otus/x86_64/Packages/typora-{{ typora_version }}-{{ typora_release }}.el7.x86_64.rpm'
+    remote_src: yes
+
+
+- name: 'create repo index'
+  shell: 'createrepo .'
+  args:
+    chdir: '/usr/share/nginx/html/repos/otus/x86_64/'

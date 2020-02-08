@@ -1,0 +1,17 @@
+---
+- name: restart openvpn-client
+  systemd:
+    name: openvpn-client@otus.local
+    state: restarted
+
+
+- name: restart openvpn-server
+  systemd:
+    name: openvpn-server@otus.local
+    state: restarted
+
+
+- name: restart network
+  systemd:
+    name: network
+    state: restarted

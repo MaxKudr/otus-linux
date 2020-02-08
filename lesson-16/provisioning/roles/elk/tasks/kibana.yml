@@ -1,0 +1,36 @@
+---
+- block:
+  - name: 'kibana : install packages'
+    yum:
+      name: kibana
+      state: present
+
+
+  - name: 'kibana : start and enable service'
+    systemd:
+      service: kibana
+      state: started
+      enabled: yes
+
+
+  - name: 'kibana : wait while starting service'
+    uri:
+      url: "http://localhost:5601/app/kibana"
+      status_code: 200
+    register: result
+    until: result.status == 200
+    retries: 300
+    delay: 1
+
+
+  - name: 'kibana : copy init script'
+    copy:
+      src: kibana/init-kibana.sh
+      dest: /tmp
+      mode: 0755
+
+
+  - name: 'kibana : init kibana'
+    command: /tmp/init-kibana.sh
+
+  tags: kibana

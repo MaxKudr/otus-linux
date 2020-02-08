@@ -1,0 +1,27 @@
+---
+- hosts:
+    - server
+  become: yes
+
+  roles:
+    - general
+    - krb-client
+    - nfs-server
+
+
+- hosts:
+    - client
+  become: yes
+
+  roles:
+    - general
+    - krb-client
+    - nfs-client
+
+
+- hosts:
+    - krb
+  become: yes
+
+  roles:
+    - krb-server

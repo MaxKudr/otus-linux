@@ -1,0 +1,17 @@
+- name: install EPEL release
+  yum:
+    name: epel-release
+    state: present
+
+
+- name: install packages
+  yum:
+    name: redis
+    state: present
+
+
+- name: start and enable service
+  systemd:
+    name: redis
+    state: started
+    enabled: yes

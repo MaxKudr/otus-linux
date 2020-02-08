@@ -1,0 +1,11 @@
+---
+- name: restart php-fpm
+  systemd:
+    name: php74-php-fpm
+    state: restarted
+
+
+- name: restart nginx
+  systemd:
+    name: nginx
+    state: restarted

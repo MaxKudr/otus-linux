@@ -1,0 +1,81 @@
+---
+- name: install EPEL repo
+  yum:
+    name: epel-release
+    state: present
+
+
+- name: install packages
+  yum:
+    name:
+      - gcc
+      - python36
+      - python36-devel
+      - python36-setuptools
+      - libxml2-devel
+      - libxslt-devel
+      - libffi-devel
+      - graphviz
+      - openssl-devel
+      - redhat-rpm-config
+      - redis
+
+
+- name: create symlink on python3
+  file:
+    src: /usr/bin/python3.6
+    dest: /usr/bin/python3
+    state: link
+
+
+- name: install siteb files
+  unarchive:
+    src: https://github.com/netbox-community/netbox/archive/v2.6.11.tar.gz
+    dest: /srv/www/siteb
+    remote_src: yes
+    extra_opts: [ --strip-components=1 ]
+
+
+- name: install requirements
+  pip:
+    executable: pip3
+    requirements: /srv/www/siteb/requirements.txt
+
+
+- name: copy config
+  copy:
+    src: configuration.py
+    dest: /srv/www/siteb/netbox/netbox/
+
+
+- name: install the database schema
+  command: 'python3 /srv/www/siteb/netbox/manage.py migrate'
+
+
+- name: collect static files
+  command: 'python3 /srv/www/siteb/netbox/manage.py collectstatic --no-input'
+
+
+- name: load initial data
+  command: 'python3 /srv/www/siteb/netbox/manage.py loaddata initial_data'
+
+
+- name: restore SELinux context
+  command: restorecon -ir /srv/www/siteb
+
+
+- name: copy service file
+  copy:
+    src: netbox.service
+    dest: /etc/systemd/system/
+
+
+- name: reload systemd
+  systemd:
+    daemon_reload: yes
+
+
+- name: start and enable service
+  systemd:
+    name: netbox
+    state: started

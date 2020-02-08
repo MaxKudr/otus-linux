@@ -1,0 +1,55 @@
+---
+- name: install packages
+  yum:
+    name: unzip
+    state: present
+
+
+- name: download Consul
+  unarchive:
+    src: https://releases.hashicorp.com/consul/1.6.2/consul_1.6.2_linux_amd64.zip
+    dest: /usr/local/sbin
+    remote_src: yes
+
+
+- name: create conul user
+  user:
+    name: consul
+    shell: /sbin/nologin
+    home: /etc/consul.d
+
+
+- name: create opt directory
+  file:
+    path: /opt/consul
+    state: directory
+    owner: consul
+    group: consul
+    mode: 0755
+
+
+- name: install Consul systemd service
+  copy:
+    src: consul.service
+    dest: /etc/systemd/system/
+
+
+- name: reload systemd
+  systemd:
+    daemon_reload: yes
+
+
+- name: copy config
+  template:
+    src: consul.json.j2
+    dest: /etc/consul.d/consul.json
+    owner: consul
+    group: consul
+  notify: restart consul
+
+
+- name: start and enable service
+  systemd:
+    name: consul
+    state: started
+    enabled: yes

@@ -1,0 +1,70 @@
+- name: 'copy static route config file'
+  copy: src={{ item.src }} dest=/etc/sysconfig/network-scripts/route-{{ item.dest }}
+  with_items:
+    - { src: 'inet-router-1-eth1', dest: 'eth1'}
+  notify: restart network
+
+
+- name: 'allow forwarding'
+  sysctl:
+    name: net.ipv4.ip_forward
+    value: 1
+    sysctl_set: yes
+
+
+- name: 'enable firewalld'
+  systemd:
+    name: firewalld
+    state: started
+    enabled: yes
+
+
+- name: 'disable ssh for central-router'
+  firewalld:
+    rich_rule: 'rule family="ipv4" source address="192.168.0.5" service name="ssh" reject'
+    permanent: yes
+    immediate: yes
+    state: enabled
+
+
+- name: 'enable masquerading'
+  firewalld:
+    masquerade: yes
+    state: enabled
+    permanent: yes
+    immediate: yes
+
+
+- name: 'configure sshd'
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '^PasswordAuthentication'
+    line: 'PasswordAuthentication yes'
+  notify: restart sshd
+
+
+- name: 'install knock server'
+  yum:
+    name: 'http://li.nux.ro/download/nux/dextop/el7/x86_64/knock-server-0.7-2.el7.nux.x86_64.rpm'
+    state: present
+
+
+- name: 'start and enable knock server'
+  systemd:
+    name: knockd
+    state: started
+    enabled: yes
+
+
+- name: 'configure knock server'
+  copy: src={{ item.src }} dest={{ item.dest }}
+  with_items:
+    - { src: knockd.conf, dest: /etc/ }
+    - { src: knockd, dest: /etc/sysconfig/ }
+  notify: restart knockd
+
+
+- name: 'create test user'
+  user:
+    name: 'test'
+    password: '$1$7vojQHpv$9KlTMthJ3ygdYv1d3N00K/'
